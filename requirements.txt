@@ -1,0 +1,7 @@
+opik
+pydantic
+python-dotenv
+google-generativeai
+requests
+python-dateutil
+pytest

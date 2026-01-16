@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.pytest_cache/
+
+# Environment variables
+.env
+
+# Google/Firebase keys (CRITICAL)
+serviceAccountKey.json
+
+# System
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
