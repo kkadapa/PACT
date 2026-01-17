@@ -3,16 +3,23 @@ import { motion } from 'framer-motion';
 import { Flame } from 'lucide-react';
 
 const POPULAR_RESOLUTIONS = [
+    "💪 Do 100 pushups/day",
     "🏋️ Exercise 3x/week",
     "💰 Save $500 this month",
     "🧘 Meditate 10min daily",
     "🥗 Eat 5 servings of veg",
+    "🛑 No work after 6 PM",
+    "📚 Read 1 book/month",
+    "💧 Drink 8 glasses of water/day",
+    "🚶 Walk 10,000 steps/day",
+    "🧘 Meditate 20min/day",
     "👨‍👩‍👧‍👦 Weekly family dinner",
     "✈️ Plan a weekend trip",
     "🎸 Learn a new skill",
     "🚭 Quit smoking/vaping",
     "🛑 No work after 6 PM",
-    "📵 Screen time < 2h/day"
+    "📵 Screen time < 2h/day",
+    "🤝 Attend 1 Networking Event/month"
 ];
 
 export const GoalInput: React.FC<{ onSubmit: (goal: string) => void, isLoading: boolean }> = ({ onSubmit, isLoading }) => {

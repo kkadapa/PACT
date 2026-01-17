@@ -19,7 +19,8 @@ class ContractAgent:
             print("[WARN] GOOGLE_API_KEY not found. Negotiator will fail unless mocked.")
         else:
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel("gemini-2.0-flash-exp") # Using latest available or relevant model
+            # Use 1.5-flash for higher rate limits (15 RPM vs 2 RPM on experimental)
+            self.model = genai.GenerativeModel("gemini-1.5-flash") 
 
     def negotiate(self, user_goal: str) -> Optional[GoalContract]:
         if not self.api_key:
