@@ -49,12 +49,17 @@ class GoalContract(BaseModel):
 # --- Verifier Schemas ---
 
 class Evidence(BaseModel):
-    activity_id: str
-    distance_km: float
+    activity_id: Optional[str] = None # Strava ID
+    distance_km: Optional[float] = None
     avg_hr: Optional[float] = None
     start_time: datetime
     activity_type: str
-    raw_strava_summary: Optional[str] = None # Hash or brief summary
+    
+    # Generic Evidence
+    text_evidence: Optional[str] = Field(None, description="User description or reasoning")
+    image_urls: List[str] = Field(default_factory=list, description="Screenshots or photos")
+    
+    raw_strava_summary: Optional[str] = None
 
 class VerificationResult(BaseModel):
     """

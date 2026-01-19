@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
-import { collection, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Activity, Bell, ShieldAlert, ArrowRight, Trash2, Edit2, X, Save } from 'lucide-react';
+import { Calendar, Activity, Bell, ShieldAlert, ArrowRight, Trash2, Edit2, X, Save, Wallet, Flame, TrendingUp } from 'lucide-react';
 
 interface Contract {
     id: string;
@@ -24,6 +24,12 @@ interface Contract {
     terms?: string[];
 }
 
+interface StakeData {
+    current_balance: number;
+    lifetime_earned: number;
+    lifetime_burned: number;
+}
+
 export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }) => {
     const { user } = useAuth();
     const [contracts, setContracts] = useState<Contract[]>([]);
@@ -33,6 +39,9 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
     // Edit State
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editGoal, setEditGoal] = useState('');
+
+    // Stake State (Default to 100 as per new user request)
+    const [stakeData, setStakeData] = useState<StakeData>({ current_balance: 100, lifetime_earned: 0, lifetime_burned: 0 });
 
     useEffect(() => {
         if (!user) {
@@ -44,6 +53,16 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
             collection(db, 'contracts'),
             where('user_id', '==', user.uid)
         );
+
+        // Fetch Stake Data
+        const stakeUnsub = onSnapshot(doc(db, 'stake_ledgers', user.uid), (doc) => {
+            if (doc.exists()) {
+                setStakeData(doc.data() as StakeData);
+            } else {
+                // Default for new users
+                setStakeData({ current_balance: 100, lifetime_earned: 0, lifetime_burned: 0 });
+            }
+        });
 
         const unsubscribe = onSnapshot(q,
             (snapshot) => {
@@ -67,7 +86,10 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
             }
         );
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribe();
+            stakeUnsub();
+        };
     }, [user]);
 
     const handleDelete = async (id: string) => {
@@ -78,7 +100,7 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
 
     const startEdit = (contract: Contract) => {
         setEditingId(contract.id);
-        setEditGoal(contract.goal);
+        setEditGoal(contract.goal || '');
     };
 
     const saveEdit = async (id: string) => {
@@ -123,6 +145,52 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                 >
                     New Pact <ArrowRight className="w-4 h-4" />
                 </button>
+            </div>
+
+            {/* Stake Overview Card */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-3">
+                    <div className="glass-panel p-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Wallet className="w-32 h-32" />
+                        </div>
+
+                        <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 relative z-10">
+                            <div>
+                                <h2 className="text-lg font-semibold flex items-center gap-2 mb-1">
+                                    <Wallet className="w-5 h-5 text-[var(--brand-primary)]" />
+                                    Stake Balance
+                                </h2>
+                                <p className="text-sm text-[var(--text-secondary)]">Your skin in the game.</p>
+                            </div>
+
+                            <div className="flex gap-8">
+                                <div className="text-center">
+                                    <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider font-bold mb-1">Current</p>
+                                    <p className="text-3xl font-black">{stakeData.current_balance} <span className="text-sm font-normal text-[var(--text-secondary)]">pts</span></p>
+                                </div>
+
+                                <div className="w-px bg-white/10" />
+
+                                <div className="text-center">
+                                    <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider font-bold mb-1">Burned</p>
+                                    <p className="text-3xl font-black text-red-500 flex items-center gap-1">
+                                        -{stakeData.lifetime_burned} <Flame className="w-4 h-4 fill-current" />
+                                    </p>
+                                </div>
+
+                                <div className="w-px bg-white/10" />
+
+                                <div className="text-center">
+                                    <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider font-bold mb-1">Earned</p>
+                                    <p className="text-3xl font-black text-green-500 flex items-center gap-1">
+                                        +{stakeData.lifetime_earned} <TrendingUp className="w-4 h-4" />
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -1,21 +1,117 @@
 from datetime import datetime, timezone
 from typing import Optional
-from opik import track # Assuming opik decorator available, or we use manual
+import os
+import google.generativeai as genai
+from opik import track
 from src.core.schemas import GoalContract, VerificationResult, VerificationStatus, Evidence, ActivityType
 from src.utils.strava_mock import StravaMockClient
 from src.utils.opik_utils import log_agent_trace
 import dateutil.parser
+import json
 
 class VerifyAgent:
     def __init__(self, strava_client: Optional[StravaMockClient] = None):
         self.strava_client = strava_client or StravaMockClient()
+        
+        # Initialize LLM for Generic Verification
+        self.api_key = os.getenv("GOOGLE_API_KEY")
+        if self.api_key:
+            genai.configure(api_key=self.api_key)
+            self.model = genai.GenerativeModel("gemini-1.5-flash")
+        else:
+            self.model = None
 
     @track(name="verify_agent", tags=["verification"])
-    def verify(self, contract: GoalContract, activity_id: str) -> VerificationResult:
+    def verify(self, contract: GoalContract, activity_id: str = None, evidence_input: Evidence = None) -> VerificationResult:
         """
-        Verifies if a specific Strava activity fulfills the GoalContract.
+        Verifies if a specific activity fulfills the GoalContract.
+        Supports both Strava Activities (specific) and Generic Evidence (LLM check).
         """
         
+        # Route to Generic Verifier if explicit evidence provided or non-Strava contract
+        if (evidence_input and (evidence_input.text_evidence or evidence_input.image_urls)) or contract.target_distance_km is None:
+            return self.verify_generic(contract, evidence_input)
+            
+        return self.verify_strava(contract, activity_id)
+
+    def verify_generic(self, contract: GoalContract, evidence: Optional[Evidence]) -> VerificationResult:
+        """
+        Uses LLM to verify generic evidence (text/image) against the goal.
+        """
+        if not self.model:
+            return VerificationResult(
+                status=VerificationStatus.UNCERTAIN, 
+                confidence=0.0, 
+                failure_reason="LLM not configured for generic verification."
+            )
+            
+        if not evidence or (not evidence.text_evidence and not evidence.image_urls):
+             return VerificationResult(
+                status=VerificationStatus.FAILURE, 
+                confidence=1.0, 
+                failure_reason="No evidence provided for generic goal."
+            )
+
+        prompt = f"""
+        System Instruction:
+        
+        You are the PACT⁰ Verification Judge. Your job is to verify physical task completion based on visual evidence.
+        You are skeptical. You look for specific visual artifacts that prove the task was done RECENTLY.
+        
+        INPUT:
+        - Goal: "{contract.goal_description}"
+        - Evidence Image: {evidence.image_urls if evidence.image_urls else 'No Image'}
+        - Text Context: {evidence.text_evidence}
+        - Timestamp: {evidence.start_time}
+        
+        YOUR TASK:
+        1. Identify the core object (Book, Gym Equipment, Clean Room).
+        2. Scan for "Proof of Work" details (Open page vs. closed book, sweat on shirt, screen timestamp).
+        3. Check for "Generic Image" fraud (Stock photo look, watermarks, impossible lighting).
+        
+        OUTPUT JSON:
+        {{
+          "visual_artifacts_detected": ["List specific items seen, e.g., 'Open book', 'Page text visible'"],
+          "is_generic_stock_photo": boolean,
+          "relevance_score": 0-100 (How well does image match goal?),
+          "proof_quality_score": 0-100 (Is it blurry? Ambiguous?),
+          "final_verdict": "SUCCESS" | "FAILURE" | "UNCERTAIN",
+          "reasoning": "Short explanation for the user."
+        }}
+        """
+        
+        try:
+             # If image URLs are present, we should actually download/pass them.
+             # For this demo step, we assume the URL allows the model (if multimodal) or we just rely on text + context.
+             # In a production version with Gemini 1.5, we would pass the image bytes.
+             
+             response = self.model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+             result = json.loads(response.text)
+             
+             log_agent_trace("verify_generic", {"evidence": evidence.model_dump()}, result)
+             
+             # Map Forensic Output to Standard Result
+             status_map = {
+                 "SUCCESS": VerificationStatus.SUCCESS,
+                 "FAILURE": VerificationStatus.FAILURE,
+                 "UNCERTAIN": VerificationStatus.UNCERTAIN
+             }
+             
+             return VerificationResult(
+                 status=status_map.get(result.get("final_verdict"), VerificationStatus.UNCERTAIN),
+                 confidence=result.get("proof_quality_score", 0) / 100.0,
+                 failure_reason=result.get("reasoning") if result.get("final_verdict") != "SUCCESS" else None,
+                 evidence=evidence
+             )
+             
+        except Exception as e:
+            return VerificationResult(
+                status=VerificationStatus.UNCERTAIN,
+                confidence=0.0,
+                failure_reason=f"Verification Error: {str(e)}"
+            )
+
+    def verify_strava(self, contract: GoalContract, activity_id: str) -> VerificationResult:
         # 1. Fetch Data
         try:
             activity = self.strava_client.get_activity(activity_id)

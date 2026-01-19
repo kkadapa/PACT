@@ -1,33 +1,38 @@
-import React from 'react';
+
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, LogOut, User } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const LoginButton = () => {
     const { user, signInWithGoogle, logout } = useAuth();
 
     return (
-        <div className="absolute top-6 right-6 z-50">
+        <div className="z-50">
             {user ? (
-                <div className="flex items-center gap-3">
-                    <div className="hidden md:block text-right">
-                        <p className="text-xs text-[var(--text-secondary)]">Signed in as</p>
-                        <p className="text-sm font-semibold">{user.displayName}</p>
+                <div className="flex items-center gap-4">
+                    {/* Dashboard button moved here or kept outside? keeping outside for now but aligning style */}
+
+                    <div className="hidden md:flex items-center gap-3 bg-white/5 pr-2 pl-4 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+                        <span className="text-sm font-semibold">{user.displayName}</span>
+                        {user.photoURL ? (
+                            <img
+                                src={user.photoURL}
+                                alt="Profile"
+                                className="w-8 h-8 rounded-full border border-[var(--glass-border)]"
+                            />
+                        ) : (
+                            <div className="w-8 h-8 rounded-full bg-[var(--brand-primary)] flex items-center justify-center text-white font-bold">
+                                {user.displayName?.charAt(0)}
+                            </div>
+                        )}
+                        <button
+                            onClick={logout}
+                            className="p-1.5 rounded-full hover:bg-white/10 text-[var(--text-secondary)] hover:text-red-400 transition-colors ml-1"
+                            title="Sign Out"
+                        >
+                            <LogOut className="w-4 h-4" />
+                        </button>
                     </div>
-                    <button
-                        onClick={logout}
-                        className="p-2 rounded-full glass-panel hover:bg-white/10 transition-colors group"
-                        title="Sign Out"
-                    >
-                        <LogOut className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-red-400 transition-colors" />
-                    </button>
-                    {user.photoURL && (
-                        <img
-                            src={user.photoURL}
-                            alt="Profile"
-                            className="w-10 h-10 rounded-full border-2 border-[var(--glass-border)]"
-                        />
-                    )}
                 </div>
             ) : (
                 <motion.button

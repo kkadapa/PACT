@@ -4,6 +4,10 @@ from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
+from fastapi import UploadFile, File, Form
+from firebase_admin import storage
+import uuid
+import datetime
 from src.agents.contract import ContractAgent
 from src.agents.verify import VerifyAgent
 from src.agents.detect import DetectAgent
@@ -15,10 +19,20 @@ app = FastAPI(title="PACT API", description="API for PACT Zero Agent System")
 # Initialize Firebase Admin
 try:
     cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
+    # check if app already exists to avoid ValueError
+    try:
+        firebase_admin.get_app()
+    except ValueError:
+        firebase_admin.initialize_app(cred, {
+            'storageBucket': 'pact-demo.appspot.com'
+        })
+    
     db = firestore.client()
+    bucket = storage.bucket()
 except Exception as e:
     print(f"Warning: Firebase Admin not initialized: {e}")
+    db = None
+    bucket = None
 
 # CORS
 app.add_middleware(
@@ -45,9 +59,12 @@ class GoalRequest(BaseModel):
     user_id: Optional[str] = None
 
 class VerifyRequest(BaseModel):
-    activity_id: str
+    # Support either activity_id OR generic evidence
+    activity_id: Optional[str] = None 
     contract: GoalContract
     user_id: str
+    text_evidence: Optional[str] = None
+    image_url: Optional[str] = None
 
 async def verify_token(authorization: str = Header(...)):
     """Verify Firebase ID Token"""
@@ -90,14 +107,46 @@ async def commit_goal(contract: GoalContract, user_id: str = Depends(verify_toke
         traceback.print_exc()
         print(f"COMMIT ERROR: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Commit failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Commit failed: {str(e)}")
 
+@app.post("/upload_evidence")
+async def upload_evidence(file: UploadFile = File(...)):
+    """
+    Uploads an image to Firebase Storage and returns the public URL.
+    """
+    try:
+        # Generate unique filename
+        filename = f"evidence/{uuid.uuid4()}_{file.filename}"
+        blob = bucket.blob(filename)
+        
+        # Upload
+        blob.upload_from_file(file.file, content_type=file.content_type)
+        blob.make_public()
+        
+        return {"url": blob.public_url}
+    except Exception as e:
+        print(f"Upload Error: {e}")
+        # MVP Mock Fallback if storage not configured
+        return {"url": "https://placehold.co/600x400?text=Mock+Evidence+Uploaded"}
 @app.post("/verify")
 async def verify_activity(request: VerifyRequest):
     """
     Step 2: Simulate verification (Demo purposes).
     """
     # 1. Verify
-    verification_result = verify_agent.verify(request.contract, request.activity_id)
+    
+    # Construct Evidence Object if generic fields present
+    from src.core.schemas import Evidence
+    evidence_input = None
+    if request.text_evidence or request.image_url:
+        evidence_input = Evidence(
+            start_time=datetime.datetime.now(datetime.timezone.utc),
+            activity_type="Generic",
+            text_evidence=request.text_evidence,
+            image_urls=[request.image_url] if request.image_url else []
+        )
+    
+    verification_result = verify_agent.verify(request.contract, request.activity_id, evidence_input)
     
     # 2. Detect (Audit)
     auditor_decision = detect_agent.evaluate(request.contract, verification_result)

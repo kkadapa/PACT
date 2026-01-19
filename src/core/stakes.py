@@ -44,7 +44,10 @@ class StakeManager:
             current_balance = data.get('current_balance', 0)
             lifetime_earned = data.get('lifetime_earned', 0)
             lifetime_burned = data.get('lifetime_burned', 0)
-
+        else:
+            # Default Start for New Users (User Request: $100 Start)
+            current_balance = 100
+            
         # 2. Determine Action
         if is_success:
             # AWARD

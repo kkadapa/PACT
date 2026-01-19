@@ -72,10 +72,8 @@ body::before {
 
 #root {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  margin: 0;
+  padding: 0;
   z-index: 1;
 }
 
@@ -142,8 +140,8 @@ body::before {
 }
 
 input[type="text"] {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #cbd5e1;
   color: var(--text-primary);
   padding: 1.25rem;
   border-radius: 16px;
@@ -152,7 +150,7 @@ input[type="text"] {
   outline: none;
   backdrop-filter: blur(4px);
   transition: all 0.2s;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 input[type="text"]::placeholder {
