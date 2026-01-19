@@ -1,5 +1,6 @@
 # PACT⁰ (Pact Zero)
 
+![PACT UI Screenshot](pact-design.png)
 > **Commitments earned through proof, not promises.**
 
 PACT⁰ is an autonomous multi-agent system that turns resolutions into living commitments. Instead of relying on willpower, PACT uses AI agents to verify real-world proof signals (Strava data), detect cheating patterns, and enforce consequences when commitments are broken.
@@ -35,6 +36,26 @@ PACT uses a specialized team of agents to manage the lifecycle of a commitment:
         *   Executes Stripe donations (Mocked/Test Mode).
         *   Logs public shame events.
         *   Adapts strictness for future contracts (Roadmap).
+
+## 📊 Evaluation & Observability
+
+We use **Opik** to systematically evaluate our agents and monitor production behavior.
+
+### 1. Offline Evaluation (Experiments)
+We have implemented a rigorous evaluation pipeline (`src/evaluate.py`) that tests the **Contract Agent** against a gold-standard dataset of 17 diverse user goals (e.g., "Do 100 pushups", "Read a book").
+*   **Dataset:** `PACT_NewYear_Goals_v1` (Managed in Opik)
+*   **Metric:** JSON Validity & Schema Compliance
+*   **Experiment:** `Contract_Agent_Baseline`
+
+**Run the evaluation yourself:**
+```bash
+python src/evaluate.py
+```
+
+### 2. Online Monitoring (Traces)
+Every interaction is traced in Opik:
+*   **Traces**: detailed waterfalls of agent reasoning (Negotiation -> Verification -> Audit).
+*   **Metrics**: Custom metrics like `detect_verdict` track how often the "Supreme Court" agent blocks enforcement.
 
 ## 🛠 Tech Stack
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target } from 'lucide-react';
+import { Rocket, Sparkles } from 'lucide-react';
 
 const POPULAR_RESOLUTIONS = [
     "💪 Do 100 pushups/day",
@@ -34,88 +34,114 @@ export const GoalInput: React.FC<{ onSubmit: (goal: string) => void, isLoading: 
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-xl mx-auto w-full"
+            className="w-full"
         >
-            <Target className="w-16 h-16 mx-auto mb-6 text-[var(--brand-primary)] drop-shadow-[0_0_15px_rgba(37,99,235,0.5)]" />
-            <h1 className="text-4xl font-bold mb-2">What will you prove?</h1>
-            <p className="text-[var(--text-secondary)] mb-8">
-                Tell us your goal. Our agents will hold you to it.
-            </p>
+            <div className="relative w-24 h-24 mx-auto mb-8 flex items-center justify-center">
+                {/* Gradient Defs for Icon */}
+                <svg width="0" height="0" className="absolute">
+                    <linearGradient id="rocket-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#22d3ee" />   {/* Cyan-400 */}
+                        <stop offset="50%" stopColor="#818cf8" />  {/* Indigo-400 */}
+                        <stop offset="100%" stopColor="#e879f9" /> {/* Fuchsia-400 */}
+                    </linearGradient>
+                </svg>
 
-            <form onSubmit={handleSubmit} className="relative mb-12 flex flex-col items-center gap-4">
-                <input
-                    type="text"
-                    placeholder="e.g., Run 10km"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    disabled={isLoading}
-                    autoFocus
-                    className="w-full glass-panel"
+                <div className="absolute inset-0 bg-blue-500 rounded-full opacity-10 animate-ping duration-[3000ms]"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-400 to-purple-500 rounded-full opacity-20 blur-2xl animate-pulse"></div>
+
+                <Rocket
+                    className="w-14 h-14 relative z-10 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] -rotate-45"
+                    style={{ stroke: "url(#rocket-gradient)" }}
                 />
-
-
-                <button
-                    type="submit"
-                    disabled={isLoading || !input}
-                    className="btn-primary w-full text-lg px-8 py-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all mt-4"
-                >
-                    {isLoading ? 'Negotiating...' : 'Next: Set Deadline'}
-                </button>
-            </form>
-
-            <div className="text-left mb-12">
-                <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider pl-1">
-                    Top Resolutions 2026
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                    {POPULAR_RESOLUTIONS.map((goal, idx) => (
-                        <motion.button
-                            key={idx}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => onSubmit(goal)}
-                            disabled={isLoading}
-                            className="glass-panel px-4 py-3 text-sm font-medium hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors text-left"
-                        >
-                            {goal}
-                        </motion.button>
-                    ))}
-                </div>
+                <Sparkles className="absolute top-3 right-3 w-6 h-6 text-yellow-300 animate-bounce duration-[2000ms] drop-shadow-md" />
             </div>
 
-            {/* Agent Team Display */}
-            <div className="pt-8 border-t border-[var(--glass-border)]">
-                <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-6 uppercase tracking-wider text-center">
-                    Your Autonomous Squad
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                            <span className="font-bold text-sm">Contract</span>
-                        </div>
-                        <p className="text-xs text-[var(--text-secondary)]">Negotiates terms & deadlines.</p>
+            <div className="w-full px-4 mb-4 text-center">
+                <h1 className="text-[clamp(2.5rem,5vw,4.5rem)] whitespace-nowrap font-black tracking-tight bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 bg-clip-text text-transparent pb-4 leading-tight">
+                    Define Your Mission
+                </h1>
+            </div>
+
+            <p className="text-slate-500 mb-10 text-xl font-medium max-w-2xl mx-auto leading-relaxed text-center">
+                Assign a directive to your autonomous squad.
+            </p>
+
+            <div className="max-w-3xl mx-auto w-full px-4">
+                <form onSubmit={handleSubmit} className="relative mb-12 flex flex-col items-center gap-4">
+                    <input
+                        type="text"
+                        placeholder="e.g., Run 10km"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        disabled={isLoading}
+                        autoFocus
+                        className="w-full glass-panel"
+                    />
+
+
+                    <button
+                        type="submit"
+                        disabled={isLoading || !input}
+                        className="btn-primary w-full text-lg px-8 py-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all mt-4"
+                    >
+                        {isLoading ? 'Negotiating...' : 'Next: Set Deadline'}
+                    </button>
+                </form>
+
+                <div className="text-left mb-12">
+                    <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider pl-1">
+                        Top Resolutions 2026
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                        {POPULAR_RESOLUTIONS.map((goal, idx) => (
+                            <motion.button
+                                key={idx}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => onSubmit(goal)}
+                                disabled={isLoading}
+                                className="glass-panel px-4 py-3 text-sm font-medium hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors text-left"
+                            >
+                                {goal}
+                            </motion.button>
+                        ))}
                     </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span className="font-bold text-sm">Verify</span>
+                </div>
+
+                {/* Agent Team Display */}
+                <div className="pt-8 border-t border-[var(--glass-border)]">
+                    <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-6 uppercase tracking-wider text-center">
+                        Your Autonomous Squad
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                                <span className="font-bold text-sm">Contract</span>
+                            </div>
+                            <p className="text-xs text-[var(--text-secondary)]">Negotiates terms & deadlines.</p>
                         </div>
-                        <p className="text-xs text-[var(--text-secondary)]">Validates proof via APIs.</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                            <span className="font-bold text-sm">Detect</span>
+                        <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                <span className="font-bold text-sm">Verify</span>
+                            </div>
+                            <p className="text-xs text-[var(--text-secondary)]">Validates proof via APIs.</p>
                         </div>
-                        <p className="text-xs text-[var(--text-secondary)]">Audits for fairness & fraud.</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="w-2 h-2 rounded-full bg-red-400"></span>
-                            <span className="font-bold text-sm">Adapt</span>
+                        <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                                <span className="font-bold text-sm">Detect</span>
+                            </div>
+                            <p className="text-xs text-[var(--text-secondary)]">Audits for fairness & fraud.</p>
                         </div>
-                        <p className="text-xs text-[var(--text-secondary)]">Enforces penalty stakes.</p>
+                        <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-2 h-2 rounded-full bg-red-400"></span>
+                                <span className="font-bold text-sm">Adapt</span>
+                            </div>
+                            <p className="text-xs text-[var(--text-secondary)]">Enforces penalty stakes.</p>
+                        </div>
                     </div>
                 </div>
             </div>

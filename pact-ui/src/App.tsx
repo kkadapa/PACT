@@ -137,7 +137,7 @@ function AppContent() {
       </div>
 
       {/* Main Content */}
-      <div className={`w-full relative z-20 transition-all duration-500 ${step === 5 ? 'max-w-5xl' : 'max-w-[440px]'}`}>
+      <div className={`w-full relative z-20 transition-all duration-500 ${step === 1 ? 'max-w-full' : step === 5 ? 'max-w-5xl' : 'max-w-[440px]'}`}>
         {/* Step Indicator (Visible after Step 1) */}
         {step > 1 && step < 5 && (
           <div className="flex items-center justify-between mb-8 px-4">
