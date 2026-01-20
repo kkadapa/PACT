@@ -73,7 +73,7 @@ async def verify_token(authorization: str = Header(...)):
     token = authorization.split("Bearer ")[1]
     try:
         decoded_token = auth.verify_id_token(token)
-        return decoded_token['uid']
+        return decoded_token
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid Token")
 
@@ -88,25 +88,47 @@ async def negotiate_goal(request: GoalRequest):
     return contract
 
 @app.post("/commit")
-async def commit_goal(contract: GoalContract, user_id: str = Depends(verify_token)):
+async def commit_goal(contract: GoalContract, token_data: dict = Depends(verify_token)):
     """
-    Step 1.5: User signs contract -> Store in Firestore
+    Step 1.5: User signs contract -> Store in Firestore & Update User Profile
     """
     try:
+        user_id = token_data['uid']
+        
+        # 1. Update/Create User Profile
+        user_ref = db.collection(u'users').document(user_id)
+        user_data = {
+            'email': token_data.get('email'),
+            'display_name': token_data.get('name'),
+            'photo_url': token_data.get('picture'),
+            'last_login_at': firestore.SERVER_TIMESTAMP,
+            'updated_at': firestore.SERVER_TIMESTAMP
+        }
+        # Stats initialization (using set with merge=True to not overwrite existing stats)
+        user_ref.set(user_data, merge=True)
+        
+        # Atomically increment total_contracts_signed
+        # (For MVP doing simple update to avoid transaction complexity if doc doesn't exist yet, 
+        # but technically we should check existence. `set(merge=True)` handles existence.)
+        # We can use FieldValue.increment
+        user_ref.update({
+            'stats.total_contracts_signed': firestore.Increment(1)
+        })
+
+        # 2. Store Contract
         doc_ref = db.collection(u'contracts').document()
         # Use mode='json' to ensure Enums are converted to strings and Datetimes to ISO strings
-        # This prevents Firestore serialization errors with Pydantic types
         contract_dict = contract.model_dump(mode='json')
         contract_dict['user_id'] = user_id
         contract_dict['status'] = 'Active'
         contract_dict['created_at'] = firestore.SERVER_TIMESTAMP
         doc_ref.set(contract_dict)
+        
         return {"status": "success", "contract_id": doc_ref.id}
     except Exception as e:
         import traceback
         traceback.print_exc()
         print(f"COMMIT ERROR: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Commit failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Commit failed: {str(e)}")
 
 @app.post("/upload_evidence")
@@ -128,6 +150,7 @@ async def upload_evidence(file: UploadFile = File(...)):
         print(f"Upload Error: {e}")
         # MVP Mock Fallback if storage not configured
         return {"url": "https://placehold.co/600x400?text=Mock+Evidence+Uploaded"}
+    
 @app.post("/verify")
 async def verify_activity(request: VerifyRequest):
     """
@@ -147,6 +170,23 @@ async def verify_activity(request: VerifyRequest):
         )
     
     verification_result = verify_agent.verify(request.contract, request.activity_id, evidence_input)
+    
+    # Update Progress Stats in User Doc
+    if request.user_id:
+        try:
+           user_ref = db.collection(u'users').document(request.user_id)
+           if verification_result.status == "SUCCESS":
+               user_ref.update({
+                   'stats.contracts_completed': firestore.Increment(1)
+               })
+           elif verification_result.status == "FAILURE":
+                user_ref.update({
+                   'stats.contracts_failed': firestore.Increment(1)
+               })
+        except Exception as e:
+            print(f"Stats Update Error: {e}")
+
+    # 2. Detect (Audit)
     
     # 2. Detect (Audit)
     auditor_decision = detect_agent.evaluate(request.contract, verification_result)

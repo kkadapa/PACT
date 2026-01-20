@@ -155,6 +155,16 @@ src/
 
 ```mermaid
 classDiagram
+    class Users {
+        +string user_id
+        +string email
+        +string display_name
+        +string photo_url
+        +map stats
+        +timestamp last_login_at
+        +timestamp updated_at
+    }
+
     class Contracts {
         +string document_id
         +string user_id
@@ -184,6 +194,7 @@ classDiagram
         +timestamp created_at
     }
 
+    Users "1" -- "*" Contracts : signs
     Contracts --> StakeEvents : generates
     StakeLedgers "1" -- "*" StakeEvents : tracks
 ```
