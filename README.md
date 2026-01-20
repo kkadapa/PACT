@@ -151,5 +151,42 @@ src/
     └── opik_utils.py    # Logging Wrappers
 ```
 
+## 💾 Backend Data Schema (Firestore)
+
+```mermaid
+classDiagram
+    class Contracts {
+        +string document_id
+        +string user_id
+        +string goal_description
+        +float target_distance_km
+        +timestamp deadline_utc
+        +string status
+        +json penalty
+    }
+
+    class StakeLedgers {
+        +string user_id
+        +float current_balance
+        +float lifetime_earned
+        +float lifetime_burned
+        +timestamp updated_at
+    }
+
+    class StakeEvents {
+        +string document_id
+        +string user_id
+        +string event_type
+        +float amount
+        +string reason
+        +float verification_confidence
+        +string opik_verdict
+        +timestamp created_at
+    }
+
+    Contracts --> StakeEvents : generates
+    StakeLedgers "1" -- "*" StakeEvents : tracks
+```
+
 ---
 *Created for the AI Agents Hackathon by Nathan Drake & The PACT Team.*
