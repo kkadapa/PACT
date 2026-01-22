@@ -37,23 +37,27 @@ PACT uses a specialized team of agents to manage the lifecycle of a commitment:
         *   Logs public shame events.
         *   Adapts strictness for future contracts (Roadmap).
 
-## 📊 Evaluation & Observability
+## 📊 Evaluation & Observability (Powered by Comet)
 
-We use **Opik** to systematically evaluate our agents and monitor production behavior.
+We use **[Opik by Comet](https://comet.com/opik)** to systematically evaluate our agents and monitor production behavior. This provides deep visibility into the "black box" of agentic decision making.
 
-### 1. Offline Evaluation (Experiments)
-We have implemented a rigorous evaluation pipeline (`src/evaluate.py`) that tests the **Contract Agent** against a gold-standard dataset of 17 diverse user goals (e.g., "Do 100 pushups", "Read a book").
-*   **Dataset:** `PACT_NewYear_Goals_v1` (Managed in Opik)
-*   **Metric:** JSON Validity & Schema Compliance
-*   **Experiment:** `Contract_Agent_Baseline`
+### 1. 🌊 Full Waterfall Tracing
+Every user action triggers a comprehensive trace that visualizes the entire lifecycle of the commitment:
+*   **Negotiation**: See the raw LLM prompts used to convert goals into contracts.
+*   **Verification**: Inspect the `VerifyAgent`'s deterministic logic and "forensic" analysis of evidence.
+*   **Audit**: Watch the `DetectAgent` ("Supreme Court") evaluate safety and reliability in real-time.
+
+### 2. 🧪 Automated Evaluation Metrics
+We have implemented a rigorous evaluation pipeline (`src/evaluate.py`) that tests the **Contract Agent** against a gold-standard dataset of 17 diverse user goals.
+*   **Metric**: `IsJson` (Automatically validates schema compliance).
+*   **Dataset**: `PACT_NewYear_Goals_v1` (Managed in Opik).
 
 **Run the evaluation yourself:**
 ```bash
 python src/evaluate.py
 ```
 
-### 2. Online Monitoring (Traces)
-Every interaction is traced in Opik:
+### 3. Online Monitoring
 *   **Traces**: detailed waterfalls of agent reasoning (Negotiation -> Verification -> Audit).
 *   **Metrics**: Custom metrics like `detect_verdict` track how often the "Supreme Court" agent blocks enforcement.
 

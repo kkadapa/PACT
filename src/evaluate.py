@@ -98,19 +98,18 @@ def run_evaluation():
         print(f"⚠️ Could not check/populate dataset: {e}")
         # Proceed with in-memory list if dataset management fails
     
-    # Running the Evaluation
-    # We use Opik's 'evaluate' function which automatically logs an Experiment
+    from opik.evaluation.metrics import IsJson
+
+    # 2. Run Evaluation
+    # We use Opik's 'evaluate' function
     print("\n🧪 Running Experiment...")
-    
-    # Simple metric: valid JSON (checked by virtue of passing)
-    # real metrics would be more complex
     
     res = evaluate(
         experiment_name="Contract_Agent_Baseline",
         dataset=dataset,
         task=eval_contract_task,
-        scoring_metrics=[], # Add custom metrics here if defined
-        nb_samples=None # Run all
+        scoring_metrics=[IsJson()], 
+        nb_samples=None 
     )
     
     print("\n✅ Evaluation Wrapper Completed.")

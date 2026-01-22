@@ -1,4 +1,4 @@
-from typing import Optional
+from opik import track
 from src.core.schemas import VerificationResult, VerificationStatus, GoalContract, AuditorDecision, AuditorVerdict
 from src.utils.opik_utils import log_agent_trace, track_metric
 
@@ -13,6 +13,7 @@ class DetectAgent:
         # In a real system, we'd fetch this from Opik
         self.mock_false_positive_rate = 0.02 # 2%
 
+    @track(name="detect_agent", tags=["audit", "safety"])
     def evaluate(self, contract: GoalContract, verification_result: VerificationResult) -> AuditorDecision:
         checks_passed = []
         checks_failed = []

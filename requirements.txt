@@ -5,3 +5,6 @@ google-generativeai
 requests
 python-dateutil
 pytest
+fastapi
+uvicorn
+firebase-admin

@@ -17,18 +17,40 @@ from src.core.schemas import GoalContract, VerificationResult, AuditorDecision, 
 app = FastAPI(title="PACT API", description="API for PACT Zero Agent System")
 
 # Initialize Firebase Admin
+# Initialize Firebase Admin
 try:
-    cred = credentials.Certificate("serviceAccountKey.json")
-    # check if app already exists to avoid ValueError
-    try:
-        firebase_admin.get_app()
-    except ValueError:
-        firebase_admin.initialize_app(cred, {
-            'storageBucket': 'pact-demo.appspot.com'
-        })
-    
-    db = firestore.client()
-    bucket = storage.bucket()
+    if os.path.exists("serviceAccountKey.json"):
+        cred = credentials.Certificate("serviceAccountKey.json")
+    else:
+        # Check for environment variable
+        import os
+        import base64
+        import json
+        encoded_creds = os.environ.get("FIREBASE_SERVICE_ACCOUNT_BASE64")
+        if encoded_creds:
+            decoded_creds = base64.b64decode(encoded_creds)
+            creds_dict = json.loads(decoded_creds)
+            cred = credentials.Certificate(creds_dict)
+        else:
+            # Fallback for Vercel/Cloud if we rely on default credentials (GCP)
+            # But specific service account is better for external hosting
+            print("Warning: No serviceAccountKey.json or FIREBASE_SERVICE_ACCOUNT_BASE64 found.")
+            cred = None
+
+    if cred:
+        # check if app already exists to avoid ValueError
+        try:
+            firebase_admin.get_app()
+        except ValueError:
+            firebase_admin.initialize_app(cred, {
+                'storageBucket': 'pact-demo.appspot.com'
+            })
+        
+        db = firestore.client()
+        bucket = storage.bucket()
+    else:
+        db = None
+        bucket = None
 except Exception as e:
     print(f"Warning: Firebase Admin not initialized: {e}")
     db = None
@@ -151,7 +173,10 @@ async def upload_evidence(file: UploadFile = File(...)):
         # MVP Mock Fallback if storage not configured
         return {"url": "https://placehold.co/600x400?text=Mock+Evidence+Uploaded"}
     
+from opik import track
+
 @app.post("/verify")
+@track(name="pact_verification_flow", tags=["api", "verification"])
 async def verify_activity(request: VerifyRequest):
     """
     Step 2: Simulate verification (Demo purposes).
@@ -174,6 +199,8 @@ async def verify_activity(request: VerifyRequest):
     # Update Progress Stats in User Doc
     if request.user_id:
         try:
+           # We use a Fire-and-Forget approach or simple await for MVP
+           # In production, this might be a background task
            user_ref = db.collection(u'users').document(request.user_id)
            if verification_result.status == "SUCCESS":
                user_ref.update({
@@ -186,8 +213,6 @@ async def verify_activity(request: VerifyRequest):
         except Exception as e:
             print(f"Stats Update Error: {e}")
 
-    # 2. Detect (Audit)
-    
     # 2. Detect (Audit)
     auditor_decision = detect_agent.evaluate(request.contract, verification_result)
     
