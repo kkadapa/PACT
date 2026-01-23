@@ -171,7 +171,7 @@ function AppContent() {
         {step === 1 && <GoalInput onSubmit={handleGoalSubmit} isLoading={false} />}
         {step === 2 && <DateInput onDateSelect={handleDateSelect} onBack={() => setStep(1)} />}
         {step === 3 && <PenaltySelector onSelect={handlePenaltySelect} onBack={() => setStep(2)} />}
-        {step === 4 && contract && <ContractCard contract={contract} onConfirm={handleConfirm} />}
+        {step === 4 && contract && <ContractCard contract={contract} onConfirm={handleConfirm} onBack={() => setStep(3)} />}
 
         {/* Dashboard integrated seamlessly */}
         {step === 5 && (

@@ -15,7 +15,7 @@ interface ContractProps {
     };
 }
 
-export const ContractCard: React.FC<{ contract: ContractProps, onConfirm: () => void }> = ({ contract, onConfirm }) => {
+export const ContractCard: React.FC<{ contract: ContractProps, onConfirm: () => void, onBack: () => void }> = ({ contract, onConfirm, onBack }) => {
     const deadline = new Date(contract.deadline_utc).toLocaleString();
 
     const renderGoal = () => {
@@ -74,9 +74,17 @@ export const ContractCard: React.FC<{ contract: ContractProps, onConfirm: () => 
                 </div>
             </div>
 
-            <button onClick={onConfirm} className="btn-primary w-full">
-                Sign Pact & Commit
-            </button>
+            <div className="flex gap-4">
+                <button
+                    onClick={onBack}
+                    className="btn-secondary flex-1"
+                >
+                    Back
+                </button>
+                <button onClick={onConfirm} className="btn-primary flex-[2]">
+                    Sign Pact & Commit
+                </button>
+            </div>
         </motion.div>
     );
 };

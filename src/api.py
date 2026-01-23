@@ -8,6 +8,7 @@ from fastapi import UploadFile, File, Form
 from firebase_admin import storage
 import uuid
 import datetime
+import os
 from src.agents.contract import ContractAgent
 from src.agents.verify import VerifyAgent
 from src.agents.detect import DetectAgent
