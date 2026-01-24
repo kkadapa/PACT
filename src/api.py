@@ -174,7 +174,7 @@ async def upload_evidence(file: UploadFile = File(...)):
         # MVP Mock Fallback if storage not configured
         return {"url": "https://placehold.co/600x400?text=Mock+Evidence+Uploaded"}
     
-from opik import track
+from src.utils.opik_utils import track
 
 @app.post("/verify")
 @track(name="pact_verification_flow", tags=["api", "verification"])
@@ -232,7 +232,7 @@ async def verify_activity(request: VerifyRequest):
             stake_result = {"error": str(e)}
 
     # Get Opik Trace ID
-    from opik import opik_context
+    from src.utils.opik_utils import opik_context
     trace_data = opik_context.get_current_trace_data()
     trace_id = trace_data.id if trace_data else None
 

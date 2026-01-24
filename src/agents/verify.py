@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 import os
 import google.generativeai as genai
-from opik import track
+from src.utils.opik_utils import track
 from src.core.schemas import GoalContract, VerificationResult, VerificationStatus, Evidence, ActivityType
 from src.utils.strava_mock import StravaMockClient
 from src.utils.opik_utils import log_agent_trace

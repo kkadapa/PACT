@@ -1,4 +1,4 @@
-from opik import track
+from src.utils.opik_utils import track
 from src.core.schemas import VerificationResult, VerificationStatus, GoalContract, AuditorDecision, AuditorVerdict
 from src.utils.opik_utils import log_agent_trace, track_metric
 
