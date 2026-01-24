@@ -44,6 +44,7 @@ class GoalContract(BaseModel):
     deadline_utc: datetime = Field(..., description="Deadline for the activity in UTC")
     min_heart_rate_avg: Optional[float] = Field(None, description="Minimum average heart rate required (anti-cheat for treadmill)")
     confidence_required: float = Field(0.95, description="Minimum verification confidence required (0.0 - 1.0)")
+    is_public: bool = Field(True, description="Whether this pact is visible in the public feed")
     penalty: Penalty
 
 # --- Verifier Schemas ---

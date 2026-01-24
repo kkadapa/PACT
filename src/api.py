@@ -236,6 +236,28 @@ async def verify_activity(request: VerifyRequest):
     trace_data = opik_context.get_current_trace_data()
     trace_id = trace_data.id if trace_data else None
 
+    # 5. Create Feed Event (NEW - Social)
+    if verification_result.status != "UNCERTAIN" and request.contract.is_public:
+        try:
+             # Basic user info lookup (optimization: pass in request or cached)
+             user_doc = db.collection(u'users').document(request.user_id).get()
+             user_data = user_doc.to_dict() if user_doc.exists else {}
+             
+             feed_item = {
+                 "type": "verification",
+                 "user_id": request.user_id,
+                 "user_name": user_data.get("display_name", "Anonymous Agent"),
+                 "user_photo": user_data.get("photo_url"),
+                 "goal_description": request.contract.goal_description,
+                 "status": verification_result.status,
+                 "timestamp": firestore.SERVER_TIMESTAMP,
+                 "evidence_summary": request.text_evidence if request.text_evidence else "Evidence verified by AI.",
+                 "trust_score_delta": 5 if verification_result.status == "SUCCESS" else -10 # Mock logic
+             }
+             db.collection(u'feed').add(feed_item)
+        except Exception as e:
+            print(f"Feed Creation Error: {e}")
+
     return {
         "verification": verification_result,
         "audit": auditor_decision,
@@ -244,6 +266,57 @@ async def verify_activity(request: VerifyRequest):
         "opik_trace_id": trace_id
     }
 
+@app.get("/feed")
+async def get_feed():
+    """
+    Returns the 20 most recent public feed events.
+    """
+    try:
+        events_ref = db.collection(u'feed').order_by(u'timestamp', direction=firestore.Query.DESCENDING).limit(20)
+        docs = events_ref.stream()
+        events = []
+        for doc in docs:
+            data = doc.to_dict()
+            # Serialize timestamp
+            if data.get('timestamp'):
+                data['timestamp'] = data['timestamp'].isoformat()
+            events.append(data)
+        return events
+    except Exception as e:
+        print(f"Feed Error: {e}")
+        return []
+
+@app.get("/leaderboard")
+async def get_leaderboard():
+    """
+    Returns top 10 users by 'contracts_completed' (proxy for Trust Score for MVP).
+    """
+    try:
+        # In a real app, we'd index this. For MVP, we might scan or rely on a small user base.
+        # Let's query by stats.contracts_completed desc
+        users_ref = db.collection(u'users').order_by(u'stats.contracts_completed', direction=firestore.Query.DESCENDING).limit(10)
+        docs = users_ref.stream()
+        leaderboard = []
+        for doc in docs:
+            data = doc.to_dict()
+            stats = data.get('stats', {})
+            completed = stats.get('contracts_completed', 0)
+            signed = stats.get('total_contracts_signed', 1) # Avoid div by zero
+            trust_score = int((completed / max(signed, 1)) * 100)
+            
+            leaderboard.append({
+                "user_id": doc.id,
+                "display_name": data.get("display_name", "Unknown"),
+                "photo_url": data.get("photo_url"),
+                "contracts_completed": completed,
+                "trust_score": trust_score
+            })
+        return leaderboard
+    except Exception as e:
+        print(f"Leaderboard Error: {e}")
+        return []
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+

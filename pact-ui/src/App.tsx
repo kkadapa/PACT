@@ -7,6 +7,7 @@ import { ContractCard } from './components/ContractCard';
 import { AboutModal } from './components/AboutModal';
 import { LoginButton } from './components/LoginButton';
 import { Dashboard } from './components/Dashboard';
+import { Community } from './components/Community';
 import { LayoutDashboard, PlusCircle, Activity, Wallet, Info } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { StakeProvider, useStake } from './contexts/StakeContext';
@@ -142,9 +143,10 @@ function AppContent() {
       {/* Main Content */}
       <div className={`w-full relative z-20 transition-all duration-500 ${step === 1 ? 'max-w-full' : step === 5 ? 'max-w-5xl' : 'max-w-[440px]'}`}>
 
-        {/* Step Indicator (Visible after Step 1 AND NOT Dashboard) */}
+        {/* Step Indicator (Visible after Step 1 AND NOT Dashboard AND NOT Community) */}
         {step > 1 && step < 5 && (
           <div className="flex items-center justify-between mb-8 px-4">
+            {/* ... existing indicator code ... */}
             {[
               { num: 1, label: 'Goal' },
               { num: 2, label: 'Timeline' },
@@ -183,6 +185,13 @@ function AppContent() {
             <Dashboard onCreateNew={resetFlow} />
           </div>
         )}
+
+        {/* Community Tab */}
+        {step === 6 && (
+          <div className="animate-fade-in">
+            <Community />
+          </div>
+        )}
       </div>
 
       {/* Loading */}
@@ -206,10 +215,11 @@ function AppContent() {
               : 'hover:bg-white/5 text-[var(--text-secondary)] hover:text-white'}`}
           >
             <PlusCircle className="w-5 h-5" />
-            <span className="uppercase tracking-widest text-xs">Initiate</span>
+            <span className="uppercase tracking-widest text-xs hidden sm:inline">Initiate</span>
+            <span className="sm:hidden"><PlusCircle className="w-5 h-5" /></span>
           </button>
 
-          <div className="w-px h-8 bg-white/10 mx-2"></div>
+          <div className="w-px h-8 bg-white/10 mx-1"></div>
 
           <button
             onClick={navigateToNexus}
@@ -218,8 +228,22 @@ function AppContent() {
               : 'hover:bg-white/5 text-[var(--text-secondary)] hover:text-white'}`}
           >
             <LayoutDashboard className="w-5 h-5" />
-            <span className="uppercase tracking-widest text-xs">Nexus</span>
+            <span className="uppercase tracking-widest text-xs hidden sm:inline">Nexus</span>
+            <span className="sm:hidden"><LayoutDashboard className="w-5 h-5" /></span>
             {!user && <span className="absolute -top-1 -right-1 flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>}
+          </button>
+
+          <div className="w-px h-8 bg-white/10 mx-1"></div>
+
+          <button
+            onClick={() => setStep(6)}
+            className={`relative flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 ${step === 6
+              ? 'bg-pink-600 text-white font-bold shadow-[0_0_20px_rgba(236,72,153,0.4)]'
+              : 'hover:bg-white/5 text-[var(--text-secondary)] hover:text-white'}`}
+          >
+            <Activity className="w-5 h-5" />
+            <span className="uppercase tracking-widest text-xs hidden sm:inline">Community</span>
+            <span className="sm:hidden"><Activity className="w-5 h-5" /></span>
           </button>
         </div>
       </div>
