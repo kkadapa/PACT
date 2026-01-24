@@ -17,7 +17,7 @@ class VerifyAgent:
         self.api_key = os.getenv("GOOGLE_API_KEY")
         if self.api_key:
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel("gemini-1.5-flash")
+            self.model = genai.GenerativeModel("gemini-2.5-flash")
         else:
             self.model = None
 
@@ -55,28 +55,32 @@ class VerifyAgent:
         prompt = f"""
         System Instruction:
         
-        You are the PACT⁰ Verification Judge. Your job is to verify physical task completion based on visual evidence.
-        You are skeptical. You look for specific visual artifacts that prove the task was done RECENTLY.
+        You are the PACT⁰ Verification Judge. Your job is to verify physical task completion based on provided evidence.
+        You are skeptical. 
+        - IF IMAGE PROVIDED: Look for visual artifacts (sweat, equipment, timestamps).
+        - IF TEXT ONLY: Evaluate the credibility, specific details, and effort described.
         
         INPUT:
         - Goal: "{contract.goal_description}"
-        - Evidence Image: {evidence.image_urls if evidence.image_urls else 'No Image'}
+        - Evidence Image: {evidence.image_urls if evidence.image_urls else 'No Image Provided'}
         - Text Context: {evidence.text_evidence}
         - Timestamp: {evidence.start_time}
         
         YOUR TASK:
-        1. Identify the core object (Book, Gym Equipment, Clean Room).
-        2. Scan for "Proof of Work" details (Open page vs. closed book, sweat on shirt, screen timestamp).
-        3. Check for "Generic Image" fraud (Stock photo look, watermarks, impossible lighting).
+        1. Analyze Evidence:
+           - Image: consistency, metadata clues, generic stock photo detection.
+           - Text: Specificity (reps, time, feeling), consistency with goal.
+        2. Verify Recency & Authenticity.
+        3. Make a Verdict.
         
         OUTPUT JSON:
         {{
-          "visual_artifacts_detected": ["List specific items seen, e.g., 'Open book', 'Page text visible'"],
+          "visual_artifacts_detected": ["List items or 'None'"],
           "is_generic_stock_photo": boolean,
-          "relevance_score": 0-100 (How well does image match goal?),
-          "proof_quality_score": 0-100 (Is it blurry? Ambiguous?),
+          "relevance_score": 0-100,
+          "proof_quality_score": 0-100 (If text only, max is 80 unless extremely convincing),
           "final_verdict": "SUCCESS" | "FAILURE" | "UNCERTAIN",
-          "reasoning": "Short explanation for the user."
+          "reasoning": "Explanation citing specific evidence or lack thereof."
         }}
         """
         

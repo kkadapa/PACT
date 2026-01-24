@@ -3,8 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Activity, Bell, ShieldAlert, ArrowRight, Trash2, Edit2, X, Save, Wallet, Flame, TrendingUp, CheckCircle, Search, Zap, ExternalLink } from 'lucide-react'; // Added icons
+import { Calendar, Activity, Bell, ShieldAlert, ArrowRight, Trash2, Edit2, X, Save, Wallet, Flame, TrendingUp, CheckCircle, Search, Zap, ExternalLink, Paperclip, Loader2 } from 'lucide-react';
 import axios from 'axios';
+import { AgentStatusOverlay } from './AgentStatusOverlay';
 
 interface Contract {
     id: string;
@@ -45,6 +46,7 @@ interface VerificationResponse {
     };
     enforcement?: string;
     stake_update?: any;
+    opik_trace_id?: string;
 }
 
 export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }) => {
@@ -65,6 +67,10 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
     const [evidenceText, setEvidenceText] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
     const [agentResult, setAgentResult] = useState<VerificationResponse | null>(null);
+
+    // Upload State
+    const [uploading, setUploading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -132,6 +138,12 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
         }
     };
 
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            setSelectedFile(event.target.files[0]);
+        }
+    };
+
     const handleVerify = async () => {
         if (!verifyingContract || !user) return;
         setIsVerifying(true);
@@ -139,21 +151,52 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
 
         try {
             const token = await user.getIdToken();
+            let imageUrl = null;
+
+            // 1. Upload Image if selected
+            if (selectedFile) {
+                setUploading(true);
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                // Note: Ensure /upload_evidence endpoint exists in api.py
+                try {
+                    const uploadRes = await axios.post(`${API_URL}/upload_evidence`, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        }
+                    });
+                    imageUrl = uploadRes.data.url;
+                } catch (uploadErr) {
+                    console.error("Upload failed, using fallback/mock url if configured", uploadErr);
+                    // Fallback or alert? For now proceed without image or with partial data
+                }
+                setUploading(false);
+            }
+
+            // 2. Verify
             const res = await axios.post(`${API_URL}/verify`, {
                 contract: verifyingContract,
                 user_id: user.uid,
-                text_evidence: evidenceText
+                text_evidence: evidenceText,
+                image_url: imageUrl
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             console.log("Agent Result:", res.data);
-            setAgentResult(res.data);
+
+            // Artificial delay to let the animation finish if API is too fast
+            setTimeout(() => {
+                setAgentResult(res.data);
+                setIsVerifying(false);
+            }, 3000);
+
         } catch (err) {
             console.error(err);
             alert("Verification failed. Check console.");
-        } finally {
             setIsVerifying(false);
+            setUploading(false);
         }
     };
 
@@ -161,7 +204,10 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
         setVerifyingContract(null);
         setAgentResult(null);
         setEvidenceText('');
+        setSelectedFile(null);
+        setUploading(false);
     };
+
 
     if (loading) {
         return (
@@ -173,10 +219,10 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
 
     if (error) {
         return (
-            <div className="p-8 text-center">
+            <div className="p-8 text-center bg-red-900/20 border border-red-500/50 rounded-xl">
                 <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Error Loading Pacts</h3>
-                <p className="text-[var(--text-secondary)] mb-4">{error}</p>
+                <h3 className="text-xl font-bold mb-2 text-red-400">SYSTEM ERROR</h3>
+                <p className="text-[var(--text-secondary)] mb-4 font-mono text-sm">{error}</p>
             </div>
         )
     }
@@ -185,56 +231,67 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full max-w-4xl mx-auto p-4 space-y-8 relative"
+            className="w-full max-w-5xl mx-auto p-4 space-y-8 relative font-mono"
         >
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Header / HUD Top */}
+            <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-[var(--brand-primary)] pb-4">
                 <div className="text-left w-full">
-                    <h1 className="text-3xl font-bold mb-1">Welcome back, {user?.displayName?.split(' ')[0]}</h1>
-                    <p className="text-[var(--text-secondary)]">Your active protocols and activity logs.</p>
+                    <div className="text-[10px] text-[var(--brand-primary)] uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[var(--brand-primary)] animate-pulse rounded-full"></div>
+                        Operator Status: Online
+                    </div>
+                    <h1 className="text-4xl font-black mb-1 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 uppercase tracking-tighter">
+                        Command Nexus // {user?.displayName?.split(' ')[0]}
+                    </h1>
                 </div>
                 <button
                     onClick={onCreateNew}
                     className="btn-primary flex items-center gap-2 whitespace-nowrap"
                 >
-                    New Pact <ArrowRight className="w-4 h-4" />
+                    Initialize Protocol +
                 </button>
             </div>
 
-            {/* Stake Overview Card */}
+            {/* Top Row: Trust Score */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-3">
-                    <div className="glass-panel p-6 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Wallet className="w-32 h-32" />
+                    <div className="glass-panel p-6 relative overflow-hidden border-l-4 border-l-[var(--brand-primary)]">
+                        {/* Deco Background */}
+                        <div className="absolute top-0 right-0 p-4 opacity-5">
+                            <Wallet className="w-48 h-48" />
                         </div>
+                        <div className="absolute bottom-0 left-20 w-32 h-1 bg-[var(--brand-primary)] opacity-20"></div>
 
                         <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 relative z-10">
                             <div>
-                                <h2 className="text-lg font-semibold flex items-center gap-2 mb-1">
-                                    <Wallet className="w-5 h-5 text-[var(--brand-primary)]" />
-                                    Stake Balance
+                                <h2 className="text-sm font-bold flex items-center gap-2 mb-1 text-[var(--brand-primary)] uppercase tracking-widest">
+                                    <Activity className="w-4 h-4" />
+                                    Trust Score
                                 </h2>
-                                <p className="text-sm text-[var(--text-secondary)]">Your skin in the game.</p>
+                                <p className="text-xs text-[var(--text-secondary)]">Reputation within the network.</p>
                             </div>
 
-                            <div className="flex gap-8">
-                                <div className="text-center">
-                                    <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider font-bold mb-1">Current</p>
-                                    <p className="text-3xl font-black">{stakeData.current_balance} <span className="text-sm font-normal text-[var(--text-secondary)]">pts</span></p>
-                                </div>
-                                <div className="w-px bg-white/10" />
-                                <div className="text-center">
-                                    <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider font-bold mb-1">Burned</p>
-                                    <p className="text-3xl font-black text-red-500 flex items-center gap-1">
-                                        -{stakeData.lifetime_burned} <Flame className="w-4 h-4 fill-current" />
+                            <div className="flex gap-12 items-end">
+                                <div className="text-right">
+                                    <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest mb-1">Current Rating</p>
+                                    <p className="text-5xl font-black tabular-nums tracking-tighter text-white shadow-brand-glow">
+                                        {stakeData.current_balance}
                                     </p>
                                 </div>
-                                <div className="w-px bg-white/10" />
-                                <div className="text-center">
-                                    <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider font-bold mb-1">Earned</p>
-                                    <p className="text-3xl font-black text-green-500 flex items-center gap-1">
-                                        +{stakeData.lifetime_earned} <TrendingUp className="w-4 h-4" />
-                                    </p>
+
+                                <div className="flex gap-8 text-right pb-1">
+                                    <div>
+                                        <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest mb-1">Penalties</p>
+                                        <p className="text-xl font-bold text-red-500 flex items-center justify-end gap-1">
+                                            -{stakeData.lifetime_burned} <Flame className="w-3 h-3 fill-current" />
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest mb-1">Rewards</p>
+                                        <p className="text-xl font-bold text-green-500 flex items-center justify-end gap-1">
+                                            +{stakeData.lifetime_earned} <TrendingUp className="w-3 h-3" />
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -242,30 +299,42 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                 </div>
             </div>
 
+            {/* Main Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="glass-panel p-6 col-span-2">
-                    <div className="flex items-center gap-2 mb-6">
-                        <Activity className="w-5 h-5 text-[var(--brand-primary)]" />
-                        <h2 className="font-semibold text-lg">Active Pacts</h2>
+                {/* Active Protocols List */}
+                <div className="col-span-2 space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-[var(--brand-primary)]">
+                            <ShieldAlert className="w-4 h-4" />
+                            <h2 className="font-bold text-sm uppercase tracking-widest">Active Protocols</h2>
+                        </div>
+                        <div className="h-px flex-1 bg-[var(--brand-primary)] opacity-20 ml-4"></div>
+                        <span className="text-xs text-[var(--text-secondary)] ml-2">{contracts.length} ACTIVE</span>
                     </div>
 
                     {contracts.length === 0 ? (
-                        <div className="text-center py-10 border border-dashed border-[var(--text-secondary)] rounded-xl opacity-50">
-                            <p>No active pacts found.</p>
-                            <button onClick={onCreateNew} className="text-[var(--brand-primary)] underline mt-2">Create one now</button>
+                        <div className="text-center py-16 border border-dashed border-gray-700 rounded-xl bg-black/20">
+                            <p className="text-[var(--text-secondary)] mb-4">No active protocols detected.</p>
+                            <button onClick={onCreateNew} className="text-[var(--brand-primary)] text-sm hover:underline uppercase tracking-wide">
+                                &gt; Initialize New Protocol
+                            </button>
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             <AnimatePresence>
                                 {contracts.map(contract => (
                                     <motion.div
                                         key={contract.id}
                                         layout
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, scale: 0.95 }}
-                                        className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] flex flex-col gap-3 group hover:bg-white/10 transition-all"
+                                        className="p-5 rounded-none border-l-2 border-l-[var(--brand-primary)] bg-gradient-to-r from-[rgba(0,240,255,0.05)] to-transparent border-y border-r border-white/5 hover:border-white/20 transition-all group relative"
                                     >
+                                        {/* Corner Deco */}
+                                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/30 opactiy-0 group-hover:opacity-100 transition-opacity"></div>
+                                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/30 opactiy-0 group-hover:opacity-100 transition-opacity"></div>
+
                                         <div className="flex justify-between items-start">
                                             <div className="text-left w-full mr-4">
                                                 {editingId === contract.id ? (
@@ -273,26 +342,27 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                                                         <input
                                                             value={editGoal}
                                                             onChange={(e) => setEditGoal(e.target.value)}
-                                                            className="w-full bg-black/20 rounded px-2 py-1 text-sm border border-white/20"
+                                                            className="w-full !bg-black !border-[var(--brand-primary)] text-sm"
                                                             autoFocus
                                                         />
-                                                        <button onClick={() => saveEdit(contract.id)} className="p-1 hover:text-green-400"><Save className="w-4 h-4" /></button>
-                                                        <button onClick={() => setEditingId(null)} className="p-1 hover:text-red-400"><X className="w-4 h-4" /></button>
+                                                        <button onClick={() => saveEdit(contract.id)} className="p-1 text-green-400 hover:bg-green-400/20 rounded"><Save className="w-4 h-4" /></button>
+                                                        <button onClick={() => setEditingId(null)} className="p-1 text-red-400 hover:bg-red-400/20 rounded"><X className="w-4 h-4" /></button>
                                                     </div>
                                                 ) : (
-                                                    <h3 className="font-medium text-lg">
-                                                        {contract.goal_description || contract.goal || (contract.target_distance_km ? `${contract.target_distance_km}km Run` : "General Goal")}
+                                                    <h3 className="font-bold text-lg text-white mb-1 tracking-tight">
+                                                        {contract.goal_description || contract.goal || (contract.target_distance_km ? `Subject: Run ${contract.target_distance_km}km` : "Subject: General Goal")}
                                                     </h3>
                                                 )}
 
-                                                <div className="flex gap-3 text-xs text-[var(--text-secondary)] mt-1">
+                                                <div className="flex gap-4 text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">
+                                                    <span className="flex items-center gap-1">
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${contract.status === 'Completed' ? 'bg-green-500' : 'bg-blue-500 animate-pulse'}`}></span>
+                                                        {contract.status || 'ACTIVE'}
+                                                    </span>
                                                     <span className="flex items-center gap-1">
                                                         <ShieldAlert className="w-3 h-3" />
-                                                        {contract.penalty?.type === 'stake_burn' ? 'Stake Burn' :
-                                                            contract.penalty?.type === 'public_shame' ? 'Public Shame' :
-                                                                contract.penalty_type || 'Donation'}
+                                                        Penalty: {contract.penalty?.type === 'stake_burn' ? 'BURN' : 'SHAME'}
                                                         {contract.penalty?.amount_usd && !['stake_burn', 'public_shame'].includes(contract.penalty.type) && ` $${contract.penalty.amount_usd}`}
-                                                        {contract.penalty?.type === 'stake_burn' && ' (-10 pts)'}
                                                     </span>
                                                     {contract.created_at && (
                                                         <span className="flex items-center gap-1">
@@ -305,18 +375,19 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                                             <div className="flex flex-col items-end gap-2">
                                                 <button
                                                     onClick={() => setVerifyingContract(contract)}
-                                                    className="px-3 py-1 rounded-full text-xs font-bold bg-[var(--brand-primary)] hover:bg-blue-600 text-white shadow-lg shadow-blue-500/30 transition-all hover:scale-105"
+                                                    className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--brand-primary)] text-black hover:bg-white hover:text-black transition-all clip-path-slant"
+                                                    style={{ clipPath: 'polygon(10px 0, 100% 0, 100% 100%, 0 100%)' }}
                                                 >
-                                                    Prove It
+                                                    Start Verify
                                                 </button>
 
                                                 {/* Actions */}
-                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => startEdit(contract)} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/20 hover:text-blue-400 transition-colors" title="Edit Goal">
-                                                        <Edit2 className="w-3.5 h-3.5" />
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => startEdit(contract)} className="p-1.5 hover:text-[var(--brand-primary)] transition-colors">
+                                                        <Edit2 className="w-3 h-3" />
                                                     </button>
-                                                    <button onClick={() => handleDelete(contract.id)} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/20 hover:text-red-400 transition-colors" title="Delete Pact">
-                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    <button onClick={() => handleDelete(contract.id)} className="p-1.5 hover:text-red-500 transition-colors">
+                                                        <Trash2 className="w-3 h-3" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -328,28 +399,34 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                     )}
                 </div>
 
-                <div className="glass-panel p-6 flex flex-col">
+                {/* System Logs Panel */}
+                <div className="glass-panel p-6 flex flex-col border-t-2 border-t-[var(--brand-secondary)]">
                     <div className="flex items-center gap-2 mb-4">
-                        <Bell className="w-5 h-5 text-[var(--brand-primary)]" />
-                        <h2 className="font-semibold text-lg">Updates</h2>
+                        <Activity className="w-4 h-4 text-[var(--brand-secondary)]" />
+                        <h2 className="font-bold text-sm uppercase tracking-widest text-[var(--brand-secondary)]">System Logs</h2>
                     </div>
 
-                    <div className="space-y-4 flex-1">
-                        {/* Static Updates for now */}
-                        <div className="flex gap-3 text-left text-sm opacity-80">
-                            <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                            <p>Active pacts synced to Auditor Agent.</p>
+                    <div className="space-y-2 flex-1 font-mono text-xs overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
+                        {contracts.map((c, i) => (
+                            <div key={i} className="flex gap-2 text-[var(--text-secondary)] opacity-80 border-b border-white/5 pb-2">
+                                <span className="text-[var(--brand-primary)]">[{new Date().getHours()}:0{i}]</span>
+                                <span>Protocol {c.id.slice(0, 4)}... initialized.</span>
+                            </div>
+                        ))}
+                        <div className="flex gap-2 text-[var(--text-secondary)] opacity-50">
+                            <span className="text-gray-600">[SYS]</span>
+                            <span>Daemon process active.</span>
                         </div>
-                        <div className="flex gap-3 text-left text-sm opacity-50">
-                            <div className="w-2 h-2 rounded-full bg-gray-500 mt-1.5 shrink-0" />
-                            <p>System initialized.</p>
+                        <div className="flex gap-2 text-[var(--text-secondary)] opacity-50">
+                            <span className="text-gray-600">[SYS]</span>
+                            <span>Observability connected.</span>
                         </div>
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-white/10">
-                        <div className="flex items-center justify-between opacity-50 text-xs">
-                            <span>Observability by</span>
-                            <div className="flex items-center gap-1 font-bold">
+                    <div className="mt-6 pt-4 border-t border-white/10">
+                        <div className="flex items-center justify-between opacity-70 text-[10px] uppercase tracking-widest">
+                            <span>Monitoring</span>
+                            <div className="flex items-center gap-1 font-bold text-white">
                                 <Zap className="w-3 h-3 text-yellow-400 fill-current" />
                                 OPIK
                             </div>
@@ -368,114 +445,132 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                         className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
                         onClick={(e) => { if (e.target === e.currentTarget) closeVerification() }}
                     >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-[#0f1115] border border-[var(--glass-border)] p-6 rounded-2xl w-full max-w-lg shadow-2xl relative overflow-hidden"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <button onClick={closeVerification} className="absolute top-4 right-4 text-white/50 hover:text-white"><X className="w-6 h-6" /></button>
+                        {/* AGENT ACTIVITY VISUALIZER */}
+                        {isVerifying ? (
+                            <AgentStatusOverlay isOpen={isVerifying} />
+                        ) : (
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.95, opacity: 0 }}
+                                className="bg-[#030014] border border-[var(--brand-primary)] p-0 rounded-none w-full max-w-lg shadow-[0_0_50px_rgba(0,240,255,0.2)] relative overflow-hidden"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="bg-[var(--brand-primary)] p-1"></div> {/* Top Bar */}
 
-                            {!agentResult ? (
-                                <>
-                                    <h2 className="text-2xl font-bold mb-2">Verify Activity</h2>
-                                    <p className="text-[var(--text-secondary)] mb-6">Provide evidence for the agents to inspect.</p>
+                                <div className="p-8 relative">
+                                    <button onClick={closeVerification} className="absolute top-4 right-4 text-white/50 hover:text-white"><X className="w-6 h-6" /></button>
 
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">What did you do?</label>
-                                            <textarea
-                                                className="w-full glass-panel p-3 h-32 resize-none"
-                                                placeholder="I ran 5km in the park..."
-                                                value={evidenceText}
-                                                onChange={(e) => setEvidenceText(e.target.value)}
-                                            />
-                                        </div>
+                                    {!agentResult ? (
+                                        <>
+                                            <h2 className="text-xl font-black uppercase tracking-widest mb-1 flex items-center gap-2">
+                                                <Search className="text-[var(--brand-primary)]" />
+                                                Verification
+                                            </h2>
+                                            <p className="text-[var(--text-secondary)] text-sm mb-6 font-mono border-b border-white/10 pb-4">
+                                                UPLOAD EVIDENCE FOR ANALYSIS //
+                                            </p>
 
-                                        <button
-                                            onClick={handleVerify}
-                                            disabled={isVerifying || !evidenceText}
-                                            className="btn-primary w-full py-3 flex items-center justify-center gap-2"
-                                        >
-                                            {isVerifying ? 'Agents Analyzing...' : 'Submit Evidence'}
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-2">
-                                    <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                                        <h2 className="text-xl font-bold flex items-center gap-2">
-                                            <Zap className="text-[var(--brand-primary)]" />
-                                            Proof Analysis
-                                        </h2>
-                                        <div className="flex items-center gap-1 text-xs px-2 py-1 bg-white/5 rounded border border-white/10">
-                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                            Opik Trace Active
-                                        </div>
-                                    </div>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <label className="block text-xs font-bold uppercase tracking-wider text-[var(--brand-primary)]">Mission Report</label>
+                                                        {uploading && <div className="text-[10px] text-[var(--brand-primary)] animate-pulse flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> UPLOADING...</div>}
+                                                    </div>
 
-                                    {/* 1. Verification Agent */}
-                                    <div className="text-left space-y-2">
-                                        <div className="flex items-center gap-2 text-sm font-bold text-blue-400 uppercase tracking-widest">
-                                            <Search className="w-4 h-4" /> Verify Agent
-                                        </div>
-                                        <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="font-bold">{agentResult.verification.status}</span>
-                                                <span className="text-xs bg-black/30 px-2 py-0.5 rounded text-blue-300">
-                                                    {(agentResult.verification.confidence * 100).toFixed(0)}% Confidence
-                                                </span>
-                                            </div>
-                                            {agentResult.verification.failure_reason ? (
-                                                <p className="text-sm text-red-300">🛑 {agentResult.verification.failure_reason}</p>
-                                            ) : (
-                                                <p className="text-sm text-[var(--text-secondary)]">Evidence matches contract requirements.</p>
-                                            )}
-                                        </div>
-                                    </div>
+                                                    {/* File Input */}
+                                                    <div className="mb-4">
+                                                        <label className={`flex items-center gap-3 px-4 py-3 bg-white/5 border border-white/20 rounded-lg cursor-pointer hover:border-[var(--brand-primary)] hover:bg-white/10 transition-all ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            <input type="file" className="hidden" onChange={handleFileSelect} accept="image/*" />
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedFile ? 'bg-green-500/20 text-green-400' : 'bg-[var(--brand-primary)]/20 text-[var(--brand-primary)]'}`}>
+                                                                {selectedFile ? <CheckCircle className="w-4 h-4" /> : <Paperclip className="w-4 h-4" />}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-bold uppercase tracking-wider text-white">
+                                                                    {selectedFile ? "Evidence Attached" : "Attach Visual Proof"}
+                                                                </span>
+                                                                <span className="text-[10px] text-[var(--text-secondary)] font-mono">
+                                                                    {selectedFile ? selectedFile.name : "SUPPORTS: JPG, PNG, WEBP"}
+                                                                </span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
 
-                                    {/* 2. Detect Agent */}
-                                    <div className="text-left space-y-2">
-                                        <div className="flex items-center gap-2 text-sm font-bold text-amber-400 uppercase tracking-widest">
-                                            <ShieldAlert className="w-4 h-4" /> Detect Agent (Audit)
-                                        </div>
-                                        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="font-bold">{agentResult.audit.verdict}</span>
-                                            </div>
-                                            <p className="text-sm text-[var(--text-secondary)] mb-2">{agentResult.audit.reason}</p>
-                                            {agentResult.audit.checks_failed.length > 0 && (
-                                                <div className="text-xs text-red-400 bg-red-900/20 p-2 rounded">
-                                                    <strong>Flags:</strong> {agentResult.audit.checks_failed.join(', ')}
+                                                    <textarea
+                                                        className="w-full !bg-black/50 !border-white/20 p-4 h-24 resize-none font-mono text-sm focus:!border-[var(--brand-primary)] placeholder-white/20"
+                                                        placeholder="Enter descriptive details (time, location, conditions)..." // Updated placeholder
+                                                        value={evidenceText}
+                                                        onChange={(e) => setEvidenceText(e.target.value)}
+                                                    />
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
 
-                                    {/* 3. Stake Update */}
-                                    {agentResult.stake_update && (
-                                        <div className="text-left space-y-2">
-                                            <div className="flex items-center gap-2 text-sm font-bold text-green-400 uppercase tracking-widest">
-                                                <Wallet className="w-4 h-4" /> Ledger Update
+                                                <button
+                                                    onClick={handleVerify}
+                                                    disabled={isVerifying || (!evidenceText && !selectedFile)}
+                                                    className="btn-primary w-full py-4 flex items-center justify-center gap-2 text-lg hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    INITIATE SCAN
+                                                </button>
                                             </div>
-                                            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-sm">
-                                                Balance Updated.
+                                        </>
+                                    ) : (
+                                        <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 font-mono">
+                                            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                                                <h2 className="text-xl font-black uppercase tracking-widest flex items-center gap-2">
+                                                    <CheckCircle className="text-green-400" />
+                                                    Analysis Complete
+                                                </h2>
+                                                <div className="flex items-center gap-1 text-[10px] px-2 py-1 bg-white/5 border border-white/10 uppercase">
+                                                    ID: {agentResult.opik_trace_id ? agentResult.opik_trace_id.slice(-6) : 'LOCAL'}
+                                                </div>
                                             </div>
+
+                                            {/* 1. Verification Agent */}
+                                            <div className="text-left space-y-2">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-[var(--brand-primary)] uppercase tracking-widest">
+                                                    <Search className="w-3 h-3" /> Agent 01: Verify
+                                                </div>
+                                                <div className="p-4 bg-[var(--brand-primary)]/5 border-l-2 border-[var(--brand-primary)]">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <span className="font-bold text-white">{agentResult.verification.status}</span>
+                                                        <span className="text-[10px] text-[var(--brand-primary)]">
+                                                            CONFIDENCE: {(agentResult.verification.confidence * 100).toFixed(0)}%
+                                                        </span>
+                                                    </div>
+                                                    {agentResult.verification.failure_reason ? (
+                                                        <p className="text-sm text-red-400">&gt;&gt; {agentResult.verification.failure_reason}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-[var(--text-secondary)]">&gt;&gt; Evidence aligned with protocol.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* 2. Detect Agent */}
+                                            <div className="text-left space-y-2">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-widest">
+                                                    <ShieldAlert className="w-3 h-3" /> Agent 02: Audit
+                                                </div>
+                                                <div className="p-4 bg-amber-500/5 border-l-2 border-amber-500">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <span className="font-bold text-white uppercase">{agentResult.audit.verdict}</span>
+                                                    </div>
+                                                    <p className="text-sm text-[var(--text-secondary)] mb-2">&gt;&gt; {agentResult.audit.reason}</p>
+                                                </div>
+                                            </div>
+
+                                            <a
+                                                href={agentResult.opik_trace_id ? `https://comet.com/opik/traces/${agentResult.opik_trace_id}` : "https://comet.com/opik"}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="block w-full py-3 text-center border border-white/20 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-all uppercase tracking-widest text-xs mt-6"
+                                            >
+                                                Access Flight Data Recorder [OPIK]
+                                            </a>
                                         </div>
                                     )}
-
-                                    <a
-                                        href="https://comet.com/opik"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block w-full py-3 text-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-[var(--text-secondary)] transition-colors mt-4 flex items-center justify-center gap-2"
-                                    >
-                                        View Full Trace in Comet <ExternalLink className="w-3 h-3" />
-                                    </a>
                                 </div>
-                            )}
-                        </motion.div>
+                            </motion.div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

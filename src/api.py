@@ -231,11 +231,17 @@ async def verify_activity(request: VerifyRequest):
             print(f"Stake Error: {e}")
             stake_result = {"error": str(e)}
 
+    # Get Opik Trace ID
+    from opik import opik_context
+    trace_data = opik_context.get_current_trace_data()
+    trace_id = trace_data.id if trace_data else None
+
     return {
         "verification": verification_result,
         "audit": auditor_decision,
         "enforcement": enforcement_log,
-        "stake_update": stake_result
+        "stake_update": stake_result,
+        "opik_trace_id": trace_id
     }
 
 @app.get("/health")

@@ -4,13 +4,12 @@ import { GoalInput } from './components/GoalInput';
 import { DateInput } from './components/DateInput';
 import { PenaltySelector } from './components/PenaltySelector';
 import { ContractCard } from './components/ContractCard';
-import { AboutModal } from './components/AboutModal'; // Restored import
+import { AboutModal } from './components/AboutModal';
 import { LoginButton } from './components/LoginButton';
 import { Dashboard } from './components/Dashboard';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Activity, Wallet, Info } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { StakeProvider, useStake } from './contexts/StakeContext';
-import { Wallet, Info } from 'lucide-react';
 import './index.css';
 
 interface PenaltyData {
@@ -94,11 +93,24 @@ function AppContent() {
     setStep(1);
   };
 
+  const navigateToNexus = () => {
+    if (user) {
+      setStep(5);
+    } else {
+      signInWithGoogle();
+    }
+  };
+
+  const navigateToCreate = () => {
+    if (step === 5) {
+      resetFlow();
+    }
+  };
 
 
   // Original Single Column Layout
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative z-10 overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative z-10 overflow-hidden pb-32"> {/* Added pb-32 for nav bar space */}
 
       {/* Background Ambience */}
       <div className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] bg-[var(--brand-primary)] rounded-full mix-blend-screen filter blur-[120px] opacity-20 pointer-events-none"></div>
@@ -113,7 +125,7 @@ function AppContent() {
         {/* Stake Balance Display */}
         <div className="group relative flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md cursor-help">
           <Wallet className="w-4 h-4 text-[var(--brand-primary)]" />
-          <span className="font-mono font-bold text-sm">${stakeData.current_balance}</span>
+          <span className="font-mono font-bold text-sm text-white">${stakeData.current_balance}</span>
 
           {/* Tooltip */}
           <div className="absolute top-full right-0 mt-2 w-64 p-3 bg-black/90 border border-white/10 rounded-xl text-xs text-[var(--text-secondary)] shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -124,21 +136,13 @@ function AppContent() {
           </div>
         </div>
 
-        {user && (
-          <button
-            onClick={() => setStep(5)}
-            className="hidden md:flex items-center gap-2 py-2 px-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm font-medium"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Dashboard</span>
-          </button>
-        )}
         <LoginButton />
       </div>
 
       {/* Main Content */}
       <div className={`w-full relative z-20 transition-all duration-500 ${step === 1 ? 'max-w-full' : step === 5 ? 'max-w-5xl' : 'max-w-[440px]'}`}>
-        {/* Step Indicator (Visible after Step 1) */}
+
+        {/* Step Indicator (Visible after Step 1 AND NOT Dashboard) */}
         {step > 1 && step < 5 && (
           <div className="flex items-center justify-between mb-8 px-4">
             {[
@@ -191,8 +195,37 @@ function AppContent() {
         </div>
       )}
 
+      {/* Fixed Cyber-Deck Navigation */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+        <div className="flex items-center gap-1 p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+
+          <button
+            onClick={navigateToCreate}
+            className={`relative flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 ${step < 5
+              ? 'bg-[var(--brand-primary)] text-black font-bold shadow-[0_0_20px_rgba(0,240,255,0.4)]'
+              : 'hover:bg-white/5 text-[var(--text-secondary)] hover:text-white'}`}
+          >
+            <PlusCircle className="w-5 h-5" />
+            <span className="uppercase tracking-widest text-xs">Initiate</span>
+          </button>
+
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+
+          <button
+            onClick={navigateToNexus}
+            className={`relative flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 ${step === 5
+              ? 'bg-[var(--brand-secondary)] text-white font-bold shadow-[0_0_20px_rgba(112,0,255,0.4)]'
+              : 'hover:bg-white/5 text-[var(--text-secondary)] hover:text-white'}`}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="uppercase tracking-widest text-xs">Nexus</span>
+            {!user && <span className="absolute -top-1 -right-1 flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>}
+          </button>
+        </div>
+      </div>
+
       {/* Footer */}
-      <div className="absolute bottom-6 right-8 z-20">
+      <div className="hidden md:block absolute bottom-6 right-8 z-20">
         <div className="flex flex-col items-end gap-2 text-sm font-medium text-[var(--text-secondary)] opacity-60">
           <button
             onClick={() => setIsAboutOpen(true)}
@@ -200,14 +233,6 @@ function AppContent() {
           >
             How it works
           </button>
-          <a
-            href="https://github.com/kkadapa"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[var(--brand-primary)] transition-all"
-          >
-            Made with ☕ by @kkadapa
-          </a>
         </div>
       </div>
 
@@ -215,6 +240,7 @@ function AppContent() {
     </div>
   );
 }
+// ... (export default) ...
 
 export default function App() {
   return (

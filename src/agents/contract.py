@@ -20,7 +20,7 @@ class ContractAgent:
         else:
             genai.configure(api_key=self.api_key)
             # Use 1.5-flash for higher rate limits (15 RPM vs 2 RPM on experimental)
-            self.model = genai.GenerativeModel("gemini-1.5-flash") 
+            self.model = genai.GenerativeModel("gemini-2.5-flash") 
 
     def negotiate(self, user_goal: str) -> Optional[GoalContract]:
         if not self.api_key:
