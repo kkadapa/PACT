@@ -15,7 +15,7 @@ from src.agents.detect import DetectAgent
 from src.agents.adapt import AdaptAgent
 from src.core.schemas import GoalContract, VerificationResult, AuditorDecision, Penalty, ConsequenceType
 
-app = FastAPI(title="PACT API", description="API for PACT Zero Agent System")
+app = FastAPI(title="PACT API", description="API for PACT Zero Agent System", root_path="/api")
 
 # Initialize Firebase Admin
 # Initialize Firebase Admin
