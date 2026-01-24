@@ -1,207 +1,144 @@
 # PACT⁰ (Pact Zero)
 
 ![PACT UI Screenshot](pact-design.png)
+
 > **Commitments earned through proof, not promises.**
 
-PACT⁰ is an autonomous multi-agent system that turns resolutions into living commitments. Instead of relying on willpower, PACT uses AI agents to verify real-world proof signals (Strava data), detect cheating patterns, and enforce consequences when commitments are broken.
+**PACT⁰** is an autonomous multi-agent system that turns resolutions into living commitments. Unlike traditional habit trackers, PACT relies on **financial stakes**, **social pressure**, and **AI verification**.
 
-Built for the **AI Agents Hackathon**, this MVP demonstrates a "zero-motivation" model where commitments are managed by code, not conscience.
+Use the **Contract Agent** to negotiate a binding agreement, verify your progress with **multi-modal evidence** (text, photos, Strava data), and prove your integrity to the community on **The Buzz**.
 
-## 🤖 The 4-Agent Architecture
+---
 
-PACT uses a specialized team of agents to manage the lifecycle of a commitment:
+## 🌟 Key Features
 
-1.  **Contract Agent** (LLM-powered)
-    *   **Role**: Translates natural language goals into machine-verifiable JSON contracts.
-    *   *Input*: "I want to run 5k by Sunday."
-    *   *Output*: Strict JSON schema with deadlines, distance targets, and defined penalties.
+### 🤖 The 4-Agent Architecture
+A specialized team of agents manages the lifecycle of every commitment:
+1.  **Contract Agent**: Translates natural language goals (e.g., "Run 5k," "Clean my room") into machine-verifiable JSON contracts.
+2.  **Verify Agent**: The "Detector". Analyzes evidence—whether it's GPS data from Strava or a photo of your clean room—to validate success.
+3.  **Detect Agent**: The "Supreme Court". Monitors the system for fairness, preventing false positives and ensuring safe enforcement.
+4.  **Adapt Agent**: The Enforcer. Executes consequences (charity donations, public shaming) when commitments are broken.
 
-2.  **Verify Agent** (Deterministic Logic)
-    *   **Role**: VALIDITY CHECK. Analyzes raw activity data (GPS, time, heart rate).
-    *   **Checks**:
-        *   Did the run happen before the deadline?
-        *   Is the distance sufficient (within tolerance)?
-        *   **Anti-Cheat**: Analyzes Heart Rate variability to detect "treadmill cheating" (running on a belt without physical exertion).
+### 📸 Universal Verification
+PACT isn't just for running.
+*   **Fitness**: Verify runs, rides, and swims via Strava integration.
+*   **Real World Tasks**: Upload a photo evidence (e.g., "Read 10 pages," "Water the plants") and let our Vision AI verify it.
+*   **Text/Journaling**: Submit text updates for semantic analysis.
 
-3.  **Detect Agent** (Safety & Observability)
-    *   **Role**: SAFETY CHECK. Acts as the "Supreme Court".
-    *   **Logic**:
-        *   Prevents enforcement if verification is uncertain.
-        *   Checks system reliability (False Positive Rate).
-        *   Ensures penalties remain within safety limits.
+### 🐝 Social & Gamification
+Accountability is better together.
+*   **The Buzz**: A live feed of verified commitments. See what others are achieving in real-time.
+*   **Trust Score**: A dynamic reputation score based on your completion rate. High trust unlocks exclusive perks.
+*   **Leaderboard**: Compete with others to become the most trustworthy user on the platform.
 
-4.  **Adapt Agent** (Enforcement)
-    *   **Role**: EXECUTION. Carries out the consequences.
-    *   **Actions**:
-        *   Executes Stripe donations (Mocked/Test Mode).
-        *   Logs public shame events.
-        *   Adapts strictness for future contracts (Roadmap).
+### 💸 Financial Stakes
+Put your money where your mouth is.
+*   **Escrow**: Stakes are held securely until the deadline.
+*   **Consequences**: Fail your pact, and your money is donated to charity (or an "anti-charity" to really motivate you).
 
-## 📊 Evaluation & Observability (Powered by Comet)
-
-We use **[Opik by Comet](https://comet.com/opik)** to systematically evaluate our agents and monitor production behavior. This provides deep visibility into the "black box" of agentic decision making.
-
-### 1. 🌊 Full Waterfall Tracing
-Every user action triggers a comprehensive trace that visualizes the entire lifecycle of the commitment:
-*   **Negotiation**: See the raw LLM prompts used to convert goals into contracts.
-*   **Verification**: Inspect the `VerifyAgent`'s deterministic logic and "forensic" analysis of evidence.
-*   **Audit**: Watch the `DetectAgent` ("Supreme Court") evaluate safety and reliability in real-time.
-
-### 2. 🧪 Automated Evaluation Metrics
-We have implemented a rigorous evaluation pipeline (`src/evaluate.py`) that tests the **Contract Agent** against a gold-standard dataset of 17 diverse user goals.
-*   **Metric**: `IsJson` (Automatically validates schema compliance).
-*   **Dataset**: `PACT_NewYear_Goals_v1` (Managed in Opik).
-
-**Run the evaluation yourself:**
-```bash
-python src/evaluate.py
-```
-
-### 3. Online Monitoring
-*   **Traces**: detailed waterfalls of agent reasoning (Negotiation -> Verification -> Audit).
-*   **Metrics**: Custom metrics like `detect_verdict` track how often the "Supreme Court" agent blocks enforcement.
+---
 
 ## 🛠 Tech Stack
 
-*   **Language**: Python 3.10+
+### Frontend ("The Nexus")
+*   **Framework**: React 19 + Vite
+*   **Styling**: Tailwind CSS v4 + Framer Motion
+*   **Infrastructure**: Firebase Auth & Firestore
+
+### Backend ("The Core")
+*   **API**: Python FastAPI
 *   **LLM**: Google Gemini 2.0 Flash (via `google-generativeai`)
-*   **Observability**: [Opik](https://comet.com/opik) (Trace logging, Metrics, Evaluation)
-*   **Data Source**: Strava (Mocked for deterministic demos)
-*   **Orchestration**: Custom functional chain (LangGraph-ready)
+*   **Orchestration**: Custom Agent Workflow
+*   **Database**: Google Cloud Firestore (NoSQL)
+*   **Storage**: Firebase Storage (Image Evidence)
+
+### Observability
+*   **Platform**: **[Opik by Comet](https://comet.com/opik)**
+*   **Features**: Full waterfall tracing of agent reasoning, automated evaluation metrics, and production monitoring.
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+*   Node.js 18+
 *   Python 3.10+
-*   Google Cloud API Key (for Gemini)
-*   Opik API Key (for observability)
+*   Google Cloud Project (for Firebase & Gemini)
+*   Opik Account (optional, for tracing)
 
-### Installation
+### 1. Backend Setup
 
-1.  Clone the repo:
+1.  **Clone and Enter Directory**:
     ```bash
     git clone https://github.com/yourusername/pact-zero.git
     cd pact-zero
     ```
 
-2.  Create virtual environment:
+2.  **Virtual Environment**:
     ```bash
     python3 -m venv venv
     source venv/bin/activate
-    ```
-
-3.  Install dependencies:
-    ```bash
     pip install -r requirements.txt
     ```
 
-4.  Configure Environment:
-    Create a `.env` file:
+3.  **Environment Variables**:
+    Create a `.env` file in the root directory:
     ```ini
-    GOOGLE_API_KEY=your_gemini_key_here
-    OPIK_API_KEY=your_opik_key_here
+    GOOGLE_API_KEY=your_gemini_key
+    OPIK_API_KEY=your_opik_key
     OPIK_PROJECT_NAME=pact-demo
+    # Firebase Service Account (Base64 encoded) or path to serviceAccountKey.json
+    FIREBASE_SERVICE_ACCOUNT_BASE64=... 
     ```
 
-## 🎮 Running the Demo
+4.  **Run the API**:
+    ```bash
+    fastapi dev src/api.py
+    ```
+    The backend will start at `http://127.0.0.1:8000`.
 
-The project includes a CLI to simulate various user scenarios without needing a real Strava account or GPS watch.
+### 2. Frontend Setup
 
-**1. The Happy Path (Success)**
-User meets their goal. Verification passes.
-```bash
-python -m src.main --scenario happy
-```
+1.  **Navigate to UI**:
+    ```bash
+    cd pact-ui
+    ```
 
-**2. The Cheater (Anti-Cheat Demo)**
-User logs a treadmill run but the Heart Rate data is flat/inconsistent.
-```bash
-python -m src.main --scenario cheat_treadmill
-```
-*Result*: Verification fails, Detect Agent authorizes enforcement, Adapt Agent charges penalty.
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
 
-**3. Late Submission**
-User misses the deadline.
-```bash
-python -m src.main --scenario late
-```
-
-**4. Short Run**
-User stops before hitting the target distance.
-```bash
-python -m src.main --scenario short
-```
-
-## 📊 Observability
-
-This project is deeply integrated with **Opik**. Every agent interaction, LLM call, and logic decision is traced.
-*   **Traces**: See exactly why a run failed verification.
-*   **Metrics**: Track "Verification Confidence" and "Enforcement Count".
-
-## 📂 Project Structure
-
-```
-src/
-├── agents/
-│   ├── contract.py   # LLM Goal Parsing
-│   ├── verify.py     # Data Validation
-│   ├── detect.py     # Safety Integration
-│   └── adapt.py      # Consequence Execution
-├── core/
-│   ├── orchestrator.py  # Agent Workflow
-│   └── schemas.py       # Shared Data Models
-└── utils/
-    ├── strava_mock.py   # Deterministic Data Generator
-    └── opik_utils.py    # Logging Wrappers
-```
-
-## 💾 Backend Data Schema (Firestore)
-
-```mermaid
-classDiagram
-    class Users {
-        +string user_id
-        +string email
-        +string display_name
-        +string photo_url
-        +map stats
-        +timestamp last_login_at
-        +timestamp updated_at
-    }
-
-    class Contracts {
-        +string document_id
-        +string user_id
-        +string goal_description
-        +float target_distance_km
-        +timestamp deadline_utc
-        +string status
-        +json penalty
-    }
-
-    class StakeLedgers {
-        +string user_id
-        +float current_balance
-        +float lifetime_earned
-        +float lifetime_burned
-        +timestamp updated_at
-    }
-
-    class StakeEvents {
-        +string document_id
-        +string user_id
-        +string event_type
-        +float amount
-        +string reason
-        +float verification_confidence
-        +string opik_verdict
-        +timestamp created_at
-    }
-
-    Users "1" -- "*" Contracts : signs
-    Contracts --> StakeEvents : generates
-    StakeLedgers "1" -- "*" StakeEvents : tracks
-```
+3.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+    The frontend will launch at `http://localhost:5173`.
 
 ---
+
+## 📚 API Reference
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/negotiate` | `POST` | Turn a goal string into a strict JSON contract. |
+| `/commit` | `POST` | Sign a contract and save it to the database. |
+| `/verify` | `POST` | Validate evidence (Activity ID, Image, or Text) against a contract. |
+| `/feed` | `GET` | Get the latest stream of public verification events. |
+| `/leaderboard` | `GET` | Get top users ranked by Trust Score. |
+| `/upload_evidence`| `POST` | Upload generic evidence (images) for verification. |
+
+---
+
+## 📊 Evaluation
+
+We treat our prompts as code. Run our automated evaluation pipeline to test the **Contract Agent** against a gold-standard dataset of user goals.
+
+```bash
+python src/evaluate.py
+```
+*metric: `IsJson` (Schema Compliance)*
+
+---
+
 *Created for the AI Agents Hackathon by Nathan Drake & The PACT Team.*
