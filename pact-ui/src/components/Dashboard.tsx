@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Activity, Bell, ShieldAlert, ArrowRight, Trash2, Edit2, X, Save, Wallet, Flame, TrendingUp, CheckCircle, Search, Zap, ExternalLink, Paperclip, Loader2 } from 'lucide-react';
+import { Calendar, Activity, ShieldAlert, Trash2, Edit2, X, Save, Wallet, Flame, TrendingUp, CheckCircle, Search, Zap, Paperclip, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { AgentStatusOverlay } from './AgentStatusOverlay';
 
