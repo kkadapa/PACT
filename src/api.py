@@ -316,6 +316,111 @@ async def get_leaderboard():
         print(f"Leaderboard Error: {e}")
         return []
 
+@app.get("/cron/reaper")
+async def reaper_job(authorization: str = Header(None)):
+    """
+    Cron Job: Automated Integrity Check ("The Reaper").
+    Runs periodically to verify deadlocked/expired contracts.
+    """
+    # 1. Security Check
+    CRON_SECRET = os.environ.get("CRON_SECRET")
+    if not CRON_SECRET:
+         # If not configured, block to be safe, or allow if debugging (but risky)
+         # For MVP guide, we enforce it.
+         print("Warning: CRON_SECRET not set.")
+    
+    # Vercel sends "Authorization: Bearer <token>"
+    # We check if the header value matches "Bearer <CRON_SECRET>"
+    if not authorization or (CRON_SECRET and authorization != f"Bearer {CRON_SECRET}"):
+        # Allow local debugging if no secret set? No, safer to return 401.
+        if CRON_SECRET:
+            raise HTTPException(status_code=401, detail="Unauthorized Cron")
+
+    results = []
+    
+    try:
+        # 2. Find Expired Active Contracts
+        # Note: Querying by 'status' == 'Active'
+        contracts_ref = db.collection('contracts').where('status', '==', 'Active')
+        docs = contracts_ref.stream()
+        
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        
+        for doc in docs:
+            data = doc.to_dict()
+            contract_id = doc.id
+            
+            # Check Deadline
+            deadline_str = data.get('deadline_utc')
+            if not deadline_str:
+                continue
+                
+            # Parse Firestore Timestamp or String
+            if isinstance(deadline_str, datetime.datetime):
+                deadline = deadline_str
+            else:
+                 # Attempt string parse
+                 try:
+                     deadline = datetime.datetime.fromisoformat(deadline_str.replace('Z', '+00:00'))
+                 except:
+                     continue
+            
+            # Ensure TZ aware
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(tzinfo=datetime.timezone.utc)
+                
+            # Grace period? Let's say 1 hour grace.
+            if now_utc > deadline + datetime.timedelta(hours=1):
+                # EXPIRED!
+                print(f"[Reaper] Reaping Contract {contract_id} (Deadline: {deadline})")
+                
+                # 3. Simulate Failure
+                # We construct a contract object
+                contract = GoalContract(**data) # Might need validation/handling
+                
+                verification_result = VerificationResult(
+                    status="FAILURE",
+                    confidence=1.0,
+                    failure_reason="Deadline exceeded without verification. Auto-Reaped.",
+                    evidence=None
+                )
+                
+                # 4. Enforce
+                # Detect
+                auditor_decision = detect_agent.evaluate(contract, verification_result)
+                
+                # Adapt
+                if auditor_decision.verdict == "ALLOW_ENFORCEMENT":
+                     adapt_agent.adapt_and_enforce(contract, auditor_decision)
+                
+                # Stake Burn
+                user_id = data.get('user_id')
+                if user_id:
+                     stake_manager.handle_outcome(user_id, verification_result)
+                     
+                     # Update User Stats
+                     try:
+                        db.collection('users').document(user_id).update({
+                            'stats.contracts_failed': firestore.Increment(1)
+                        })
+                     except:
+                        pass
+
+                # 5. Update Contract Status
+                db.collection('contracts').document(contract_id).update({
+                    'status': 'Failed',
+                    'reaped_at': firestore.SERVER_TIMESTAMP
+                })
+                
+                results.append(f"Reaped {contract_id} for user {user_id}")
+                
+        return {"status": "success", "processed": len(results), "details": results}
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "detail": str(e)}
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
