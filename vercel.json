@@ -21,11 +21,5 @@
             "src": "/(.*)",
             "dest": "/pact-ui/$1"
         }
-    ],
-    "crons": [
-        {
-            "path": "/api/cron/reaper",
-            "schedule": "0 * * * *"
-        }
     ]
 }

@@ -1,0 +1,16 @@
+name: The Reaper (Cron)
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs every hour
+  workflow_dispatch:      # Allows manual trigger
+
+jobs:
+  reap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Reaper Endpoint
+        run: |
+          curl -X GET https://pact-mu.vercel.app/api/cron/reaper \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -v
