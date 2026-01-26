@@ -339,6 +339,9 @@ async def reaper_job(authorization: str = Header(None)):
     results = []
     
     try:
+        if not db:
+            return {"status": "error", "detail": "Database not initialized. Check FIREBASE_SERVICE_ACCOUNT_BASE64 in Vercel Env Vars."}
+
         # 2. Find Expired Active Contracts
         # Note: Querying by 'status' == 'Active'
         contracts_ref = db.collection('contracts').where('status', '==', 'Active')

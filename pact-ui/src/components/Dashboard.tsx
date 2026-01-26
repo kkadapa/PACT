@@ -545,7 +545,6 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                                                 </div>
                                             </div>
 
-                                            {/* 2. Detect Agent */}
                                             <div className="text-left space-y-2">
                                                 <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-widest">
                                                     <ShieldAlert className="w-3 h-3" /> Agent 02: Audit
@@ -557,6 +556,31 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                                                     <p className="text-sm text-[var(--text-secondary)] mb-2">&gt;&gt; {agentResult.audit.reason}</p>
                                                 </div>
                                             </div>
+
+                                            {/* 3. Stake Update (Financial Impact) */}
+                                            {agentResult.stake_update && (
+                                                <div className="text-left space-y-2">
+                                                    <div className="flex items-center gap-2 text-xs font-bold text-purple-400 uppercase tracking-widest">
+                                                        <Wallet className="w-3 h-3" /> Agent 03: Financial Impact
+                                                    </div>
+                                                    <div className={`p-4 border-l-2 ${agentResult.stake_update.action === 'BURN' ? 'bg-red-500/10 border-red-500' : agentResult.stake_update.action === 'EARN' ? 'bg-green-500/10 border-green-500' : 'bg-gray-500/10 border-gray-500'}`}>
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <span className={`font-bold uppercase ${agentResult.stake_update.action === 'BURN' ? 'text-red-400' : agentResult.stake_update.action === 'EARN' ? 'text-green-400' : 'text-gray-400'}`}>
+                                                                {agentResult.stake_update.action || 'NO ACTION'}
+                                                            </span>
+                                                            <span className="font-mono font-bold text-white">
+                                                                {agentResult.stake_update.amount > 0 ? `$${agentResult.stake_update.amount}` : '$0'}
+                                                            </span>
+                                                        </div>
+                                                        {agentResult.stake_update.reason && (
+                                                            <p className="text-sm text-[var(--text-secondary)]">&gt;&gt; {agentResult.stake_update.reason}</p>
+                                                        )}
+                                                        {agentResult.stake_update.error && (
+                                                            <p className="text-sm text-red-500">&gt;&gt; ERROR: {agentResult.stake_update.error}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             <a
                                                 href={agentResult.opik_trace_id ? `https://comet.com/opik/traces/${agentResult.opik_trace_id}` : "https://comet.com/opik"}
