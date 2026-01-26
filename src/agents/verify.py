@@ -101,10 +101,22 @@ class VerifyAgent:
                  "UNCERTAIN": VerificationStatus.UNCERTAIN
              }
              
+             verdict = result.get("final_verdict", "UNCERTAIN")
+             
+             # Logic Fix: If verdict is FAILURE, we are confident in the failure (lack of proof).
+             # If verdict is SUCCESS, we use the proof_quality_score as confidence.
+             mapped_status = status_map.get(verdict, VerificationStatus.UNCERTAIN)
+             
+             final_confidence = 0.0
+             if mapped_status == VerificationStatus.FAILURE:
+                 final_confidence = 1.0
+             elif mapped_status == VerificationStatus.SUCCESS:
+                 final_confidence = result.get("proof_quality_score", 0) / 100.0
+             
              return VerificationResult(
-                 status=status_map.get(result.get("final_verdict"), VerificationStatus.UNCERTAIN),
-                 confidence=result.get("proof_quality_score", 0) / 100.0,
-                 failure_reason=result.get("reasoning") if result.get("final_verdict") != "SUCCESS" else None,
+                 status=mapped_status,
+                 confidence=final_confidence,
+                 failure_reason=result.get("reasoning") if mapped_status != VerificationStatus.SUCCESS else None,
                  evidence=evidence
              )
              
