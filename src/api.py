@@ -14,6 +14,7 @@ from src.agents.verify import VerifyAgent
 from src.agents.detect import DetectAgent
 from src.agents.adapt import AdaptAgent
 from src.core.schemas import GoalContract, VerificationResult, AuditorDecision, Penalty, ConsequenceType
+from src.integrations.twitter import twitter_client
 
 app = FastAPI(title="PACT API", description="API for PACT Zero Agent System", root_path="/api")
 
@@ -408,6 +409,19 @@ async def reaper_job(authorization: str = Header(None)):
                         })
                      except:
                         pass
+                        
+                     # 5. Public Shaming (X/Twitter)
+                     try:
+                         # Fetch user name for the tweet
+                         user_doc = db.collection('users').document(user_id).get()
+                         user_name = user_doc.to_dict().get('display_name', 'A PACT User') if user_doc.exists else 'A PACT User'
+                         
+                         shame_message = f"🚨 SHAME ALERT 🚨\n\n{user_name} just failed their PACT: \"{contract.goal_description}\"\n\nThey didn't verify in time and lost their stake! 💸\n\n#PACT #Accountability #PublicShaming"
+                         
+                         # Post Tweet
+                         twitter_client.post_shame_tweet(shame_message)
+                     except Exception as e:
+                         print(f"Shaming Error: {e}")
 
                 # 5. Update Contract Status
                 db.collection('contracts').document(contract_id).update({
