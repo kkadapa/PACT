@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Activity, ShieldAlert, Trash2, Edit2, X, Save, Wallet, Flame, TrendingUp, CheckCircle, Search, Zap, Paperclip, Loader2 } from 'lucide-react';
+import { Calendar, Activity, ShieldAlert, Trash2, Edit2, X, Save, Wallet, Flame, TrendingUp, CheckCircle, Search, Zap, Paperclip, Loader2, AlarmClock } from 'lucide-react';
 import axios from 'axios';
 import { AgentStatusOverlay } from './AgentStatusOverlay';
 
@@ -23,6 +23,7 @@ interface Contract {
     created_at: any;
     user_id: string;
     terms?: string[];
+    deadline_utc?: string | any; // Firestore Timestamp or String
 }
 
 interface StakeData {
@@ -54,6 +55,7 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [reminder, setReminder] = useState<string | null>(null);
 
     // Edit State
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -101,6 +103,31 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                 } as Contract));
                 fetchedContracts.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
                 setContracts(fetchedContracts);
+
+                // Reminder Logic
+                const now = new Date();
+                const urgentContract = fetchedContracts.find(c => {
+                    if (c.status !== 'Active' || !c.deadline_utc) return false;
+                    let deadline;
+                    // Handle Firestore Timestamp vs ISO String
+                    if (typeof c.deadline_utc === 'string') {
+                        deadline = new Date(c.deadline_utc.replace('Z', '')); // basic parsing
+                    } else if (c.deadline_utc?.seconds) {
+                        deadline = new Date(c.deadline_utc.seconds * 1000);
+                    } else {
+                        return false;
+                    }
+
+                    const hoursLeft = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
+                    return hoursLeft > 0 && hoursLeft < 24;
+                });
+
+                if (urgentContract) {
+                    setReminder(`⏰ ACTION REQUIRED: "${urgentContract.goal_description || 'Your Goal'}" expires in < 24 hours!`);
+                } else {
+                    setReminder(null);
+                }
+
                 setLoading(false);
             },
             (err) => {
@@ -233,6 +260,24 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
             animate={{ opacity: 1 }}
             className="w-full max-w-5xl mx-auto p-4 space-y-8 relative font-mono"
         >
+            {/* Reminder Banner */}
+            <AnimatePresence>
+                {reminder && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="bg-amber-500/10 border border-amber-500/50 text-amber-500 px-4 py-3 flex items-center justify-between overflow-hidden"
+                    >
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-sm">
+                            <AlarmClock className="w-4 h-4" />
+                            {reminder}
+                        </div>
+                        <button onClick={() => setReminder(null)} className="hover:text-white"><X className="w-4 h-4" /></button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Header / HUD Top */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-[var(--brand-primary)] pb-4">
                 <div className="text-left w-full">
