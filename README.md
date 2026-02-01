@@ -19,6 +19,45 @@ A specialized team of agents manages the lifecycle of every commitment:
 3.  **Detect Agent**: The "Supreme Court". Monitors the system for fairness, preventing false positives and ensuring safe enforcement.
 4.  **Adapt Agent**: The Enforcer. Executes consequences (charity donations, public shaming) when commitments are broken.
 
+### 🏗 Architecture
+
+```mermaid
+graph TD
+    User((User)) -->|Goals & Evidence| UI[Frontend "The Nexus"\n(React 19 + Vite)]
+    UI <-->|JSON Requests| API[Backend API\n(FastAPI)]
+    
+    subgraph "Google Cloud / Firebase"
+        DB[(Firestore\nNoSQL)]
+        Storage[Firebase Storage\n(Evidence Media)]
+    end
+    
+    subgraph "The Agent Swarm (Gemini 2.0 Flash)"
+        Contract[Contract Agent\n(Negotiator + RAG)]
+        Verify[Verify Agent\n(Vision AI)]
+        Detect[Detect Agent\n(Auditor)]
+        Adapt[Adapt Agent\n(Enforcer)]
+    end
+    
+    subgraph Integrations
+        Twitter[X / Twitter\n(Public Shaming)]
+        Opik[Opik\n(Tracing & Eval)]
+    end
+    
+    API <--> Contract
+    API <--> Verify
+    API <--> Detect
+    API <--> Adapt
+    
+    Contract <-->|Load Knowledge| DB
+    Verify <-->|Analyze| Storage
+    Adapt -->|Post Tweet| Twitter
+    
+    Contract -.->|Trace| Opik
+    Verify -.->|Trace| Opik
+    
+    API <-->|Auth & Data| DB
+```
+
 ### 📸 Universal Verification
 PACT isn't just for running.
 *   **Fitness**: Verify runs, rides, and swims via Strava integration.
