@@ -1,0 +1,47 @@
+{
+    "running": {
+        "description": "Standard terms for running goals. Focus on clear distance and pace.",
+        "terms": [
+            "GPS data required from Strava or compatible device.",
+            "Must be a single continuous activity.",
+            "Average pace must be faster than 15:00/km (walking pace)."
+        ],
+        "risk_factors": "GPS drift, paused activities."
+    },
+    "coding": {
+        "description": "Standard terms for software development goals.",
+        "terms": [
+            "Must verify via GitHub commit or PR link.",
+            "Code must compile/build successfully.",
+            "Snippet or diff required as evidence."
+        ],
+        "risk_factors": "Empty commits, auto-generated code."
+    },
+    "fitness": {
+        "description": "General fitness goals (gym, yoga, etc).",
+        "terms": [
+            "Photo evidence of equipment or studio required.",
+            "Timestamp metadata must match claim time.",
+            "Wearable heart rate data preferred if available."
+        ],
+        "risk_factors": "Old photos, geolocation mismatch."
+    },
+    "reading": {
+        "description": "Output-based goals like reading pages or books.",
+        "terms": [
+            "Photo of page/chapter start and end.",
+            "Brief summary required in text evidence.",
+            "Time-lapse optional but recommended for long sessions."
+        ],
+        "risk_factors": "Skimming, using online summaries."
+    },
+    "general": {
+        "description": "Fallback for generic goals.",
+        "terms": [
+            "Photo or Video evidence clearly showing the result.",
+            "Text description of the activity.",
+            "Must complete before the deadline."
+        ],
+        "risk_factors": "Ambiguity in 'success' definition."
+    }
+}

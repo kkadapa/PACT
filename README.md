@@ -38,6 +38,27 @@ Put your money where your mouth is.
 
 ---
 
+## 🏆 Why PACT? (Hackathon Criteria)
+
+### 💡 Novelty
+Traditional habit trackers are passive input forms. **PACT is Agentic.** It negotiates with you, audits your evidence like a lawyer, and enforces consequences without bias. It turns *intent* into *binding contract* using a multi-agent system that mimics real-world accountability partners.
+
+### 🛠 Tech Implementation & AI
+We utilize a cutting-edge **Multi-Agent Architecture**:
+*   **Agentic RAG**: The *Contract Agent* retrieves "Standard Terms" from a knowledge base to ensure your goals are measurable and fair (e.g., pulling standard marathon pacing rules).
+*   **Vision AI**: The *Verify Agent* uses Gemini 1.5 Flash to analyze photo evidence (e.g., verifying a gym selfie contains equipment).
+*   **System 2 Thinking**: The *Detect Agent* acts as a Supreme Court, auditing the verifier's decision before money is moved.
+
+### 🌍 Impact
+Procrastination and lack of follow-through cost individuals health, wealth, and happiness. PACT provides the **forcing function** needed to bridge the gap between "I should" and "I did." By automating accountability, we make high-performance habits accessible to everyone.
+
+### 💰 Viability (Business Model)
+*   **Transaction Fees**: 1% fee on staked amounts.
+*   **Enterprise API**: "PACT for Teams" allows companies to automate employee wellness and productivity goals.
+*   **Insurance**: "Goal Insurance" where users can pay a premium to protect their stake in case of documented emergencies.
+
+---
+
 ## 🛠 Tech Stack
 
 ### Frontend ("The Nexus")

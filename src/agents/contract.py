@@ -21,14 +21,56 @@ class ContractAgent:
             genai.configure(api_key=self.api_key)
             # Use 1.5-flash for higher rate limits (15 RPM vs 2 RPM on experimental)
             self.model = genai.GenerativeModel("gemini-2.5-flash") 
+            
+            # RAG: Load Knowledge Base
+            try:
+                base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                kb_path = os.path.join(base_path, "data", "standard_terms.json")
+                with open(kb_path, "r") as f:
+                    self.knowledge_base = json.load(f)
+            except Exception as e:
+                print(f"[WARN] Failed to load RAG Knowledge Base: {e}")
+                self.knowledge_base = {}
+
+    def _retrieve_context(self, goal: str) -> str:
+        """Simple RAG Retrieval: Finds best matching category."""
+        goal_lower = goal.lower()
+        best_match = "general"
+        
+        # Simple keyword fallback for MVP RAG
+        if "run" in goal_lower or "marathon" in goal_lower or "km" in goal_lower:
+            best_match = "running"
+        elif "code" in goal_lower or "program" in goal_lower or "app" in goal_lower:
+            best_match = "coding"
+        elif "read" in goal_lower or "book" in goal_lower:
+            best_match = "reading"
+        elif "gym" in goal_lower or "lift" in goal_lower or "yoga" in goal_lower:
+            best_match = "fitness"
+            
+        kb_data = self.knowledge_base.get(best_match, {})
+        if not kb_data:
+            return ""
+            
+        return f"""
+        [RAG CONTEXT RETRIEVED]
+        CATEGORY: {best_match.upper()}
+        STANDARD TERMS: {json.dumps(kb_data.get('terms', []))}
+        KNOWN RISK FACTORS: {kb_data.get('risk_factors', 'None')}
+        (Use these to inform the 'terms' array in the contract)
+        """ 
 
     def negotiate(self, user_goal: str) -> Optional[GoalContract]:
         if not self.api_key:
             return None
 
+        # RAG Step: Retrieve Context
+        rag_context = self._retrieve_context(user_goal)
+
         prompt = f"""
         You are the Contract Agent for PACT.
         Your job is to convert a user's natural language goal into a Machine Verifiable Contract (JSON).
+        
+        {rag_context}
         
         USER INPUT: "{user_goal}"
         
