@@ -21,26 +21,28 @@ A specialized team of agents manages the lifecycle of every commitment:
 
 ### 🏗 Architecture
 
+### 🏗 Architecture
+
 ```mermaid
 graph TD
-    User((User)) -->|Goals & Evidence| UI[Frontend "The Nexus"\n(React 19 + Vite)]
-    UI <-->|JSON Requests| API[Backend API\n(FastAPI)]
+    User((User)) -->|Goals & Evidence| UI["Frontend 'The Nexus'<br>(React 19 + Vite)"]
+    UI <-->|JSON Requests| API["Backend API<br>(FastAPI)"]
     
-    subgraph "Google Cloud / Firebase"
-        DB[(Firestore\nNoSQL)]
-        Storage[Firebase Storage\n(Evidence Media)]
+    subgraph Google_Cloud ["Google Cloud / Firebase"]
+        DB[("Firestore<br>NoSQL")]
+        Storage["Firebase Storage<br>(Evidence Media)"]
     end
     
-    subgraph "The Agent Swarm (Gemini 2.0 Flash)"
-        Contract[Contract Agent\n(Negotiator + RAG)]
-        Verify[Verify Agent\n(Vision AI)]
-        Detect[Detect Agent\n(Auditor)]
-        Adapt[Adapt Agent\n(Enforcer)]
+    subgraph Agents ["The Agent Swarm (Gemini 2.0 Flash)"]
+        Contract["Contract Agent<br>(Negotiator + RAG)"]
+        Verify["Verify Agent<br>(Vision AI)"]
+        Detect["Detect Agent<br>(Auditor)"]
+        Adapt["Adapt Agent<br>(Enforcer)"]
     end
     
     subgraph Integrations
-        Twitter[X / Twitter\n(Public Shaming)]
-        Opik[Opik\n(Tracing & Eval)]
+        Twitter["X / Twitter<br>(Public Shaming)"]
+        Opik["Opik<br>(Tracing & Eval)"]
     end
     
     API <--> Contract
