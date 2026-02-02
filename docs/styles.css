@@ -1,0 +1,106 @@
+/* Custom styles on top of Pico CSS */
+
+:root {
+    --primary: #00f0ff;
+    /* Cyber blue */
+    --primary-hover: #00c0cc;
+    --background-color: #030014;
+    --card-background-color: #0a0a20;
+    --border-color: #00f0ff;
+    --h1-color: #ffffff;
+    --h2-color: #00f0ff;
+}
+
+body {
+    background-color: var(--background-color);
+    font-family: 'Courier New', Courier, monospace;
+    /* Keeping the terminal vibes */
+}
+
+/* Gradient Text */
+.gradient-text {
+    background: linear-gradient(90deg, #00f0ff, #ffffff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Hero Section */
+.hero-section {
+    padding: 6rem 0;
+    text-align: center;
+    background: radial-gradient(circle at center, #1a1a40 0%, #030014 70%);
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: -2px;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: #a0a0c0;
+    max-width: 600px;
+    margin: 0 auto 2rem auto;
+}
+
+/* Cards */
+article {
+    background-color: var(--card-background-color) !important;
+    border: 1px solid rgba(0, 240, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+article:hover {
+    border-color: var(--border-color);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+    transform: translateY(-5px);
+}
+
+article header {
+    color: var(--primary);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Icons styling */
+[data-lucide] {
+    stroke-width: 2.5px;
+}
+
+/* Mermaid override for dark theme */
+.mermaid {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Navbar */
+nav ul li a {
+    color: #fff;
+    font-weight: bold;
+}
+
+nav ul li strong {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+footer {
+    text-align: center;
+    padding: 4rem 0;
+    opacity: 0.7;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+}

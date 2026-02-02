@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PACT⁰ - The Agentic Commitment Protocol</title>
+    <meta name="description" content="PACT is an autonomous multi-agent system that enforces human commitments using AI verification and financial stakes.">
+    <!-- Pico CSS for fast, clean styling -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Mermaid for diagrams -->
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    </script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="container-fluid">
+        <nav>
+            <ul>
+                <li><strong>PACT⁰</strong></li>
+            </ul>
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#tech">Tech Strategy</a></li>
+                <li><a href="https://github.com/kkadapa/PACT" role="button" class="contrast outline">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="container hero-content">
+            <h1 class="hero-title">Commitments earned through <span class="gradient-text">proof</span>, not promises.</h1>
+            <p class="hero-subtitle">
+                The world's first <strong>Agentic Commitment Protocol</strong>. 
+                Negotiated by AI. Verified by Vision. Enforced by Code.
+            </p>
+            <div class="grid">
+                <a href="https://github.com/kkadapa/PACT" role="button" class="primary">View Source</a>
+                <a href="#demo" role="button" class="secondary outline">Watch Demo</a>
+            </div>
+            <br>
+            <article class="pico-article">
+                <header>🚨 <strong>The Problem: The "Action Gap"</strong></header>
+                <p>Traditional habit trackers are passive. They wait for you to input data. They don't care if you lie, and they don't care if you quit. PACT doesn't just track your goals; it enforces them.</p>
+            </article>
+        </div>
+    </section>
+
+    <!-- Key Features -->
+    <br><br>
+    <main class="container">
+        
+        <hgroup style="text-align:center; margin-bottom: 3rem;">
+            <h2>The 4-Agent Swarm</h2>
+            <p>Powered by Google Gemini 2.0 Flash</p>
+        </hgroup>
+
+        <div class="grid">
+            <article>
+                <header><i data-lucide="file-signature"></i> <strong>Contract Agent</strong></header>
+                <p>Translates vague goals ("run more") into machine-verifiable JSON contracts using <strong>RAG</strong> to pull standard terms.</p>
+            </article>
+            <article>
+                <header><i data-lucide="video"></i> <strong>Verify Agent</strong></header>
+                <p>The "Detector". Uses <strong>Vision AI</strong> to analyze photo/video evidence and Strava data to validate success.</p>
+            </article>
+            <article>
+                <header><i data-lucide="scale"></i> <strong>Detect Agent</strong></header>
+                <p>The "Supreme Court". Audits the verifier's decision using <strong>System 2 thinking</strong> to prevent false positives.</p>
+            </article>
+            <article>
+                <header><i data-lucide="siren"></i> <strong>Adapt Agent</strong></header>
+                <p>The Enforcer. Executes consequences (charity donations, public shaming on X) when pacts are broken.</p>
+            </article>
+        </div>
+
+        <hr>
+
+        <!-- Architecture -->
+        <section id="architecture">
+            <hgroup>
+                <h2>System Architecture</h2>
+                <p>Automated Accountability Pipeline</p>
+            </hgroup>
+            
+            <div class="mermaid">
+            graph TD
+                User((User)) -->|Goals & Evidence| UI["Frontend 'The Nexus'<br>(React 19 + Vite)"]
+                UI <-->|JSON Requests| API["Backend API<br>(FastAPI)"]
+                
+                subgraph Google_Cloud ["Google Cloud / Firebase"]
+                    DB[("Firestore<br>NoSQL")]
+                    Storage["Firebase Storage<br>(Evidence Media)"]
+                end
+                
+                subgraph Agents ["The Agent Swarm (Gemini 2.0 Flash)"]
+                    Contract["Contract Agent<br>(Negotiator + RAG)"]
+                    Verify["Verify Agent<br>(Vision AI)"]
+                    Detect["Detect Agent<br>(Auditor)"]
+                    Adapt["Adapt Agent<br>(Enforcer)"]
+                end
+                
+                subgraph Integrations
+                    Twitter["X / Twitter<br>(Public Shaming)"]
+                    Opik["Opik<br>(Tracing & Eval)"]
+                end
+                
+                API <--> Contract
+                API <--> Verify
+                API <--> Detect
+                API <--> Adapt
+                
+                Contract <-->|Load Knowledge| DB
+                Verify <-->|Analyze| Storage
+                Adapt -->|Post Tweet| Twitter
+                
+                Contract -.->|Trace| Opik
+                Verify -.->|Trace| Opik
+                
+                API <-->|Auth & Data| DB
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- Tech Strategy to Win -->
+        <section id="tech">
+            <h2>Why PACT?</h2>
+            <div class="grid">
+                <article>
+                    <header>💡 <strong>Novelty</strong></header>
+                    <p>Traditional apps are passive input forms. PACT is <strong>Agentic</strong>. It negotiates, audits, and enforces without bias.</p>
+                </article>
+                <article>
+                    <header>🌍 <strong>Impact</strong></header>
+                    <p>Solving procrastination helps health & wealth. PACT provides the <strong>forcing function</strong> to bridge "I should" and "I did."</p>
+                </article>
+                <article>
+                    <header>💰 <strong>Viability</strong></header>
+                    <p>Business Model: 1% transaction fee on staked amounts + Enterprise API for team productivity.</p>
+                </article>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="container">
+        <small>Built for the AI Agents Hackathon by Nathan Drake & The PACT Team.</small>
+        <p>
+            <a href="https://github.com/kkadapa/PACT">GitHub</a> • 
+            <a href="#">Demo Video</a>
+        </p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

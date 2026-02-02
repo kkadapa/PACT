@@ -21,8 +21,6 @@ A specialized team of agents manages the lifecycle of every commitment:
 
 ### 🏗 Architecture
 
-### 🏗 Architecture
-
 ```mermaid
 graph TD
     User((User)) -->|Goals & Evidence| UI["Frontend 'The Nexus'<br>(React 19 + Vite)"]
