@@ -4,7 +4,7 @@
 
 > **Commitments earned through proof, not promises.**
 >
-> 🌐 **Live Website**: [pact.github.io](https://kkadapa.github.io/PACT/)
+> 🌐 **Project Documentation Website**: [pact.github.io](https://kkadapa.github.io/PACT/)
 
 **PACT⁰** is an autonomous multi-agent system that turns resolutions into living commitments. Unlike traditional habit trackers, PACT relies on **financial stakes**, **social pressure**, and **AI verification**.
 
