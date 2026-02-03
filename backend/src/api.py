@@ -119,6 +119,24 @@ async def commit_goal(contract: GoalContract, token_data: dict = Depends(verify_
     try:
         user_id = token_data['uid']
         
+        # 1.1 Duplicate Check (NEW)
+        # Query for existing Active contracts for this user
+        contracts_ref = db.collection('contracts').where('user_id', '==', user_id).where('status', '==', 'Active')
+        active_docs = contracts_ref.stream()
+        
+        new_goal = contract.goal_description.strip().lower()
+        new_deadline = contract.deadline_utc # ISO String usually
+        
+        for doc in active_docs:
+            existing = doc.to_dict()
+            existing_goal = existing.get('goal_description', '').strip().lower()
+            
+            # Check Goal Text Similarity (Exact match for MVP)
+            if existing_goal == new_goal:
+                # Check Deadline (Optional: assume if goal is same, it's a dupe regardless of deadline, or check deadline too)
+                # Let's be strict: Same Goal = Duplicate, unless old one is completed/failed.
+                raise HTTPException(status_code=409, detail=f"Duplicate active pact detected! You are already committed to: '{existing.get('goal_description')}'")
+
         # 1. Update/Create User Profile
         user_ref = db.collection(u'users').document(user_id)
         user_data = {

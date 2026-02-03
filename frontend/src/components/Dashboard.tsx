@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
-import { collection, query, where, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Activity, ShieldAlert, Trash2, Edit2, X, Save, Wallet, Flame, TrendingUp, CheckCircle, Search, Zap, Paperclip, Loader2, AlarmClock } from 'lucide-react';
+import { Calendar, Activity, ShieldAlert, Trash2, Edit2, X, Wallet, Flame, TrendingUp, CheckCircle, Search, Zap, Paperclip, Loader2, AlarmClock } from 'lucide-react';
 import axios from 'axios';
 import { AgentStatusOverlay } from './AgentStatusOverlay';
+import { EditContractModal } from './EditContractModal';
 
 interface Contract {
     id: string;
@@ -58,8 +59,8 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
     const [reminder, setReminder] = useState<string | null>(null);
 
     // Edit State
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editGoal, setEditGoal] = useState('');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
 
     // Stake State
     const [stakeData, setStakeData] = useState<StakeData>({ current_balance: 100, lifetime_earned: 0, lifetime_burned: 0 });
@@ -154,15 +155,8 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
     };
 
     const startEdit = (contract: Contract) => {
-        setEditingId(contract.id);
-        setEditGoal(contract.goal || '');
-    };
-
-    const saveEdit = async (id: string) => {
-        if (editGoal.trim()) {
-            await updateDoc(doc(db, "contracts", id), { goal: editGoal });
-            setEditingId(null);
-        }
+        setSelectedContract(contract);
+        setIsEditModalOpen(true);
     };
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -382,22 +376,9 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
 
                                         <div className="flex justify-between items-start">
                                             <div className="text-left w-full mr-4">
-                                                {editingId === contract.id ? (
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            value={editGoal}
-                                                            onChange={(e) => setEditGoal(e.target.value)}
-                                                            className="w-full !bg-black !border-[var(--brand-primary)] text-sm"
-                                                            autoFocus
-                                                        />
-                                                        <button onClick={() => saveEdit(contract.id)} className="p-1 text-green-400 hover:bg-green-400/20 rounded"><Save className="w-4 h-4" /></button>
-                                                        <button onClick={() => setEditingId(null)} className="p-1 text-red-400 hover:bg-red-400/20 rounded"><X className="w-4 h-4" /></button>
-                                                    </div>
-                                                ) : (
-                                                    <h3 className="font-bold text-lg text-white mb-1 tracking-tight">
-                                                        {contract.goal_description || contract.goal || (contract.target_distance_km ? `Subject: Run ${contract.target_distance_km}km` : "Subject: General Goal")}
-                                                    </h3>
-                                                )}
+                                                <h3 className="font-bold text-lg text-white mb-1 tracking-tight">
+                                                    {contract.goal_description || contract.goal || (contract.target_distance_km ? `Subject: Run ${contract.target_distance_km}km` : "Subject: General Goal")}
+                                                </h3>
 
                                                 <div className="flex gap-4 text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">
                                                     <span className="flex items-center gap-1">
@@ -639,8 +620,18 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                                     )}
                                 </div>
                             </motion.div>
-                        )}
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Edit Modal */}
+            <AnimatePresence>
+                {isEditModalOpen && selectedContract && (
+                    <EditContractModal
+                        contract={selectedContract}
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                    />
                 )}
             </AnimatePresence>
         </motion.div>

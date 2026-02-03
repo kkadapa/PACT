@@ -82,9 +82,15 @@ function AppContent() {
       setGoal('');
       setDate('');
       setContract(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Failed to commit to pact.');
+      if (err.response && err.response.status === 409) {
+        alert(err.response.data.detail || "You already have a similar active pact!");
+        // Optional: Redirect to Nexus/Dashboard to show them the existing one
+        setStep(5);
+      } else {
+        alert('Failed to commit to pact.');
+      }
     } finally {
       setIsLoading(false);
     }
