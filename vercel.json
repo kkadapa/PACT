@@ -1,11 +1,11 @@
 {
     "builds": [
         {
-            "src": "src/api.py",
+            "src": "backend/src/api.py",
             "use": "@vercel/python"
         },
         {
-            "src": "pact-ui/package.json",
+            "src": "frontend/package.json",
             "use": "@vercel/static-build",
             "config": {
                 "distDir": "dist"
@@ -15,11 +15,11 @@
     "routes": [
         {
             "src": "/api/(.*)",
-            "dest": "src/api.py"
+            "dest": "backend/src/api.py"
         },
         {
             "src": "/(.*)",
-            "dest": "/pact-ui/$1"
+            "dest": "/frontend/$1"
         }
     ]
 }

@@ -130,10 +130,9 @@ Procrastination and lack of follow-through cost individuals health, wealth, and 
 
 ### 1. Backend Setup
 
-1.  **Clone and Enter Directory**:
+1.  **Navigate to Backend**:
     ```bash
-    git clone https://github.com/yourusername/pact-zero.git
-    cd pact-zero
+    cd backend
     ```
 
 2.  **Virtual Environment**:
@@ -144,7 +143,7 @@ Procrastination and lack of follow-through cost individuals health, wealth, and 
     ```
 
 3.  **Environment Variables**:
-    Create a `.env` file in the root directory:
+    Create a `.env` file in the `backend/` directory:
     ```ini
     GOOGLE_API_KEY=your_gemini_key
     OPIK_API_KEY=your_opik_key
@@ -163,7 +162,7 @@ Procrastination and lack of follow-through cost individuals health, wealth, and 
 
 1.  **Navigate to UI**:
     ```bash
-    cd pact-ui
+    cd ../frontend
     ```
 
 2.  **Install Dependencies**:
