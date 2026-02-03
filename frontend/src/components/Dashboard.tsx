@@ -318,7 +318,7 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
 
                             <div className="flex gap-12 items-end">
                                 <div className="text-right">
-                                    <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest mb-1">Current Rating</p>
+                                    <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-widest mb-2">Trust Points</p>
                                     <p className="text-5xl font-black tabular-nums tracking-tighter text-white shadow-brand-glow">
                                         {stakeData.current_balance}
                                     </p>
