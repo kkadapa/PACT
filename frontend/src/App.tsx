@@ -8,7 +8,8 @@ import { AboutModal } from './components/AboutModal';
 import { LoginButton } from './components/LoginButton';
 import { Dashboard } from './components/Dashboard';
 import { Community } from './components/Community';
-import { LayoutDashboard, PlusCircle, Activity, Wallet, Info } from 'lucide-react';
+import { SystemVision } from './components/SystemVision';
+import { LayoutDashboard, PlusCircle, Activity, Wallet, Info, Terminal } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { StakeProvider, useStake } from './contexts/StakeContext';
 import './index.css';
@@ -27,6 +28,7 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [contract, setContract] = useState<any>(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false); // Restored state
+  const [isSystemVisionOpen, setIsSystemVisionOpen] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -103,7 +105,8 @@ function AppContent() {
   };
 
   const navigateToCreate = () => {
-    if (step === 5) {
+    // Allow navigation from Dashboard (5) OR Community (6)
+    if (step >= 5) {
       resetFlow();
     }
   };
@@ -111,14 +114,19 @@ function AppContent() {
 
   // Original Single Column Layout
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative z-10 overflow-hidden pb-32"> {/* Added pb-32 for nav bar space */}
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative z-10 overflow-hidden pt-32"> {/* Changed pb-32 to pt-32 for top nav space */}
 
       {/* Background Ambience */}
       <div className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] bg-[var(--brand-primary)] rounded-full mix-blend-screen filter blur-[120px] opacity-20 pointer-events-none"></div>
 
       {/* Header: Logo & Auth */}
-      <div className="absolute top-8 left-8 font-black text-3xl tracking-tighter opacity-80 z-20">
-        PACT<span className="text-[var(--brand-primary)]">⁰</span>
+      <div className="absolute top-8 left-8 z-20">
+        <div className="font-black text-3xl tracking-tighter opacity-80 leading-none">
+          PACT<span className="text-[var(--brand-primary)]">⁰</span>
+        </div>
+        <div className="text-[10px] font-bold tracking-[0.2em] text-[var(--text-secondary)] uppercase mt-1 opacity-60">
+          Proof-Activated Commitment Tracker
+        </div>
       </div>
 
       <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
@@ -204,9 +212,9 @@ function AppContent() {
         </div>
       )}
 
-      {/* Fixed Cyber-Deck Navigation */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-        <div className="flex items-center gap-1 p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+      {/* Fixed Cyber-Deck Navigation (Moved to Top) */}
+      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="flex items-center gap-1 p-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
 
           <button
             onClick={navigateToCreate}
@@ -235,6 +243,9 @@ function AppContent() {
 
           <div className="w-px h-8 bg-white/10 mx-1"></div>
 
+
+          <div className="w-px h-8 bg-white/10 mx-1"></div>
+
           <button
             onClick={() => setStep(6)}
             className={`relative flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 ${step === 6
@@ -242,11 +253,25 @@ function AppContent() {
               : 'hover:bg-white/5 text-[var(--text-secondary)] hover:text-white'}`}
           >
             <Activity className="w-5 h-5" />
-            <span className="uppercase tracking-widest text-xs hidden sm:inline">Community</span>
+            <span className="uppercase tracking-widest text-xs hidden sm:inline">Buzz</span>
             <span className="sm:hidden"><Activity className="w-5 h-5" /></span>
+          </button>
+
+          <div className="w-px h-8 bg-white/10 mx-1"></div>
+
+          <button
+            onClick={() => setIsSystemVisionOpen(true)}
+            className="relative flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-white/5 text-[var(--brand-primary)] hover:text-white transition-all group"
+          >
+            <div className="relative">
+              <Terminal className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-[var(--brand-primary)] rounded-full animate-ping opacity-75"></span>
+            </div>
           </button>
         </div>
       </div>
+
+      {isSystemVisionOpen && <SystemVision onClose={() => setIsSystemVisionOpen(false)} />}
 
       {/* Footer */}
       <div className="hidden md:block absolute bottom-6 right-8 z-20">

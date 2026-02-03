@@ -270,52 +270,119 @@ async def verify_activity(request: VerifyRequest):
 @app.get("/feed")
 async def get_feed():
     """
-    Returns the 20 most recent public feed events.
+    Returns the 20 most recent public feed events. (Mock Data for Demo)
     """
-    try:
-        events_ref = db.collection(u'feed').order_by(u'timestamp', direction=firestore.Query.DESCENDING).limit(20)
-        docs = events_ref.stream()
-        events = []
-        for doc in docs:
-            data = doc.to_dict()
-            # Serialize timestamp
-            if data.get('timestamp'):
-                data['timestamp'] = data['timestamp'].isoformat()
-            events.append(data)
-        return events
-    except Exception as e:
-        print(f"Feed Error: {e}")
-        return []
+    # MOCK DATA FOR DEMO
+    utc_now = datetime.datetime.now(datetime.timezone.utc)
+    return [
+        {
+            "type": "verification",
+            "user_name": "Sarah Jenkins",
+            "user_photo": "https://i.pravatar.cc/150?u=sarah",
+            "goal_description": "Run 5km before 8 AM",
+            "status": "SUCCESS",
+            "timestamp": (utc_now - datetime.timedelta(minutes=5)).isoformat(),
+            "evidence_summary": "Strava Activity Verified: 5.02km @ 5:30/km",
+            "trust_score_delta": 5
+        },
+        {
+            "type": "verification",
+            "user_name": "David Kim",
+            "user_photo": "https://i.pravatar.cc/150?u=david",
+            "goal_description": "Read 30 pages of 'Atomic Habits'",
+            "status": "SUCCESS",
+            "timestamp": (utc_now - datetime.timedelta(minutes=14)).isoformat(),
+            "evidence_summary": "Photo Verified: Open book with page number visible.",
+            "trust_score_delta": 5
+        },
+        {
+            "type": "verification",
+            "user_name": "Marcus Chen",
+            "user_photo": "https://i.pravatar.cc/150?u=marcus",
+            "goal_description": "No Sugar for 24h",
+            "status": "FAILURE",
+            "timestamp": (utc_now - datetime.timedelta(minutes=45)).isoformat(),
+            "evidence_summary": "Self-Reported: 'Ate a donut at the office.'",
+            "trust_score_delta": -15
+        },
+        {
+            "type": "verification",
+            "user_name": "Elena Rodriguez",
+            "user_photo": "https://i.pravatar.cc/150?u=elena",
+            "goal_description": "Ship 3 Pull Requests",
+            "status": "SUCCESS",
+            "timestamp": (utc_now - datetime.timedelta(hours=1, minutes=12)).isoformat(),
+            "evidence_summary": "GitHub API: 3 Merged PRs detected in repo/frontend.",
+            "trust_score_delta": 10
+        },
+        {
+            "type": "verification",
+            "user_name": "James T.",
+            "user_photo": "https://i.pravatar.cc/150?u=james",
+            "goal_description": "Wake up by 6:00 AM",
+            "status": "SUCCESS",
+            "timestamp": (utc_now - datetime.timedelta(hours=2)).isoformat(),
+            "evidence_summary": "Photo Verified: Watch face time check.",
+            "trust_score_delta": 5
+        }
+    ]
 
 @app.get("/leaderboard")
 async def get_leaderboard():
     """
-    Returns top 10 users by 'contracts_completed' (proxy for Trust Score for MVP).
+    Returns top 10 users by 'contracts_completed'. (Mock Data for Demo)
     """
-    try:
-        # In a real app, we'd index this. For MVP, we might scan or rely on a small user base.
-        # Let's query by stats.contracts_completed desc
-        users_ref = db.collection(u'users').order_by(u'stats.contracts_completed', direction=firestore.Query.DESCENDING).limit(10)
-        docs = users_ref.stream()
-        leaderboard = []
-        for doc in docs:
-            data = doc.to_dict()
-            stats = data.get('stats', {})
-            completed = stats.get('contracts_completed', 0)
-            signed = stats.get('total_contracts_signed', 1) # Avoid div by zero
-            trust_score = int((completed / max(signed, 1)) * 100)
-            
-            leaderboard.append({
-                "user_id": doc.id,
-                "display_name": data.get("display_name", "Unknown"),
-                "photo_url": data.get("photo_url"),
-                "contracts_completed": completed,
-                "trust_score": trust_score
-            })
-        return leaderboard
-    except Exception as e:
-        print(f"Leaderboard Error: {e}")
-        return []
+    return [
+        {
+            "user_id": "user_001",
+            "display_name": "Sarah Jenkins",
+            "photo_url": "https://i.pravatar.cc/150?u=sarah",
+            "contracts_completed": 142,
+            "trust_score": 99
+        },
+        {
+            "user_id": "user_002",
+            "display_name": "David Kim",
+            "photo_url": "https://i.pravatar.cc/150?u=david",
+            "contracts_completed": 115,
+            "trust_score": 97
+        },
+         {
+            "user_id": "user_003",
+            "display_name": "Elena Rodriguez",
+            "photo_url": "https://i.pravatar.cc/150?u=elena",
+            "contracts_completed": 98,
+            "trust_score": 95
+        },
+        {
+            "user_id": "user_004",
+            "display_name": "Michael Chang",
+            "photo_url": "https://i.pravatar.cc/150?u=michael",
+            "contracts_completed": 89,
+            "trust_score": 92
+        },
+        {
+            "user_id": "user_088",
+            "display_name": "Jessica Wu",
+            "photo_url": "https://i.pravatar.cc/150?u=jessica",
+            "contracts_completed": 76,
+            "trust_score": 90
+        },
+        {
+            "user_id": "user_999",
+            "display_name": "Marcus Chen",
+            "photo_url": "https://i.pravatar.cc/150?u=marcus",
+            "contracts_completed": 45,
+            "trust_score": 82
+        },
+        {
+            "user_id": "user_777",
+            "display_name": "Alex T.",
+            "photo_url": "https://i.pravatar.cc/150?u=alex",
+            "contracts_completed": 30,
+            "trust_score": 78
+        }
+    ]
 
 @app.get("/cron/reaper")
 async def reaper_job(authorization: str = Header(None)):
@@ -437,6 +504,37 @@ async def reaper_job(authorization: str = Header(None)):
         import traceback
         traceback.print_exc()
         return {"status": "error", "detail": str(e)}
+
+
+@app.get("/opik/traces")
+async def get_opik_traces():
+    """
+    Returns recent traces from Opik.
+    """
+    try:
+        from src.utils.opik_utils import get_opik_client
+        client = get_opik_client()
+        if not client:
+             # Return mock traces if Opik not active
+             return [
+                 {"id": "mock-1", "name": "contract_negotiation", "start_time": datetime.datetime.now().isoformat(), "duration": 1.2, "status": "success"},
+                 {"id": "mock-2", "name": "verify_evidence", "start_time": datetime.datetime.now().isoformat(), "duration": 0.8, "status": "success"},
+             ]
+        
+        # Search traces (Default project)
+        # Note: Opik SDK returns Pydantic models, we need to serialize them
+        traces = client.search_traces(project_name=os.environ.get("OPIK_PROJECT_NAME", "pact-demo"), max_results=10)
+        
+        # Serialize
+        serialized_traces = []
+        for t in traces:
+             t_dict = t.model_dump(mode='json') if hasattr(t, 'model_dump') else t.__dict__
+             serialized_traces.append(t_dict)
+             
+        return serialized_traces
+    except Exception as e:
+        print(f"Opik Fetch Error: {e}")
+        return []
 
 @app.get("/health")
 async def health():

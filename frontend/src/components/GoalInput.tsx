@@ -89,7 +89,7 @@ export const GoalInput: React.FC<{ onSubmit: (goal: string) => void, isLoading: 
                 </form>
 
                 <div className="text-left mb-12">
-                    <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider pl-1">
+                    <h3 className="text-xl font-bold text-[var(--text-secondary)] mb-4 uppercase tracking-wider pl-1 font-display">
                         Top Resolutions 2026
                     </h3>
                     <div className="flex flex-wrap gap-3">
@@ -100,7 +100,7 @@ export const GoalInput: React.FC<{ onSubmit: (goal: string) => void, isLoading: 
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => onSubmit(goal)}
                                 disabled={isLoading}
-                                className="glass-panel px-4 py-3 text-sm font-medium hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors text-left"
+                                className="glass-panel px-5 py-4 text-lg font-medium hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors text-left"
                             >
                                 {goal}
                             </motion.button>
@@ -108,42 +108,7 @@ export const GoalInput: React.FC<{ onSubmit: (goal: string) => void, isLoading: 
                     </div>
                 </div>
 
-                {/* Agent Team Display */}
-                <div className="pt-8 border-t border-[var(--glass-border)]">
-                    <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-6 uppercase tracking-wider text-center">
-                        Your Autonomous Squad
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                                <span className="font-bold text-sm">Contract</span>
-                            </div>
-                            <p className="text-xs text-[var(--text-secondary)]">Negotiates terms & deadlines.</p>
-                        </div>
-                        <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                                <span className="font-bold text-sm">Verify</span>
-                            </div>
-                            <p className="text-xs text-[var(--text-secondary)]">Validates proof via APIs.</p>
-                        </div>
-                        <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                                <span className="font-bold text-sm">Detect</span>
-                            </div>
-                            <p className="text-xs text-[var(--text-secondary)]">Audits for fairness & fraud.</p>
-                        </div>
-                        <div className="p-4 rounded-xl bg-white/5 border border-[var(--glass-border)] hover:bg-white/10 transition-colors text-left">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="w-2 h-2 rounded-full bg-red-400"></span>
-                                <span className="font-bold text-sm">Adapt</span>
-                            </div>
-                            <p className="text-xs text-[var(--text-secondary)]">Enforces penalty stakes.</p>
-                        </div>
-                    </div>
-                </div>
+                {/* Agent Team Display Removed */}
             </div>
         </motion.div>
     );

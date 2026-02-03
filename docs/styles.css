@@ -1,25 +1,25 @@
 /* Custom styles on top of Pico CSS */
 
 :root {
-    --primary: #00f0ff;
-    /* Cyber blue */
-    --primary-hover: #00c0cc;
-    --background-color: #030014;
-    --card-background-color: #0a0a20;
-    --border-color: #00f0ff;
+    --primary: #ff6b00;
+    /* Quantis Orange */
+    --primary-hover: #ff8c00;
+    --background-color: #050505;
+    --card-background-color: #0f0a05;
+    --border-color: #ff6b00;
     --h1-color: #ffffff;
-    --h2-color: #00f0ff;
+    --h2-color: #ff6b00;
 }
 
 body {
     background-color: var(--background-color);
-    font-family: 'Courier New', Courier, monospace;
-    /* Keeping the terminal vibes */
+    font-family: 'Outfit', sans-serif;
+    /* Modern sans over mono */
 }
 
 /* Gradient Text */
 .gradient-text {
-    background: linear-gradient(90deg, #00f0ff, #ffffff);
+    background: linear-gradient(90deg, #ff6b00, #ffba00);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -29,7 +29,7 @@ body {
 .hero-section {
     padding: 6rem 0;
     text-align: center;
-    background: radial-gradient(circle at center, #1a1a40 0%, #030014 70%);
+    background: radial-gradient(circle at center, #2a1000 0%, #050505 70%);
 }
 
 .hero-title {

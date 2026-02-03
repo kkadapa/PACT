@@ -401,7 +401,7 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
 
                                                 <div className="flex gap-4 text-[10px] uppercase tracking-wider text-[var(--text-secondary)]">
                                                     <span className="flex items-center gap-1">
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${contract.status === 'Completed' ? 'bg-green-500' : 'bg-blue-500 animate-pulse'}`}></span>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${contract.status === 'Completed' ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`}></span>
                                                         {contract.status || 'ACTIVE'}
                                                     </span>
                                                     <span className="flex items-center gap-1">

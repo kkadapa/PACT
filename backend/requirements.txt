@@ -5,7 +5,7 @@ google-generativeai
 requests
 python-dateutil
 
-fastapi
+fastapi[standard]
 uvicorn
 firebase-admin
 python-multipart
