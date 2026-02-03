@@ -9,6 +9,11 @@ interface Contract {
     goal?: string;
     goal_description?: string;
     deadline_utc?: string | any;
+    penalty?: {
+        type: string;
+        amount_usd?: number;
+    };
+    penalty_type?: string;
 }
 
 interface EditContractModalProps {
@@ -37,6 +42,8 @@ export const EditContractModal: React.FC<EditContractModalProps> = ({ contract, 
 
     const [goalText, setGoalText] = useState(initialGoal);
     const [deadline, setDeadline] = useState(initialDate);
+    // Initialize penalty type (fallback to 'stake_burn' if undefined)
+    const [penaltyType, setPenaltyType] = useState(contract.penalty?.type || contract.penalty_type || 'stake_burn');
     const [isSaving, setIsSaving] = useState(false);
 
     if (!isOpen) return null;
@@ -47,7 +54,11 @@ export const EditContractModal: React.FC<EditContractModalProps> = ({ contract, 
             const updates: any = {
                 goal_description: goalText,
                 // If legacy 'goal' field exists, update it too for consistency
-                goal: goalText
+                goal: goalText,
+                // Update penalty object
+                'penalty.type': penaltyType,
+                // Also flat field for legacy/search support if needed
+                penalty_type: penaltyType
             };
 
             if (deadline) {
@@ -116,6 +127,21 @@ export const EditContractModal: React.FC<EditContractModalProps> = ({ contract, 
                                 className="w-full bg-black/50 border border-white/20 rounded p-3 pl-10 text-white font-mono text-sm focus:border-[var(--brand-primary)] focus:outline-none"
                             />
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-[var(--brand-primary)] uppercase tracking-wider mb-2">
+                            Penalty Type
+                        </label>
+                        <select
+                            value={penaltyType}
+                            onChange={(e) => setPenaltyType(e.target.value)}
+                            className="w-full bg-black/50 border border-white/20 rounded p-3 text-white font-mono text-sm focus:border-[var(--brand-primary)] focus:outline-none appearance-none"
+                        >
+                            <option value="stake_burn">Stake Burn ($)</option>
+                            <option value="public_shame">Public Shame (Twitter)</option>
+                            <option value="donation">Donation (Charity)</option>
+                        </select>
                     </div>
                 </div>
 

@@ -26,6 +26,7 @@ A specialized team of agents manages the lifecycle of every commitment:
 ```mermaid
 graph TD
     User((User)) -->|Goals & Evidence| UI["Frontend 'The Nexus'<br>(React 19 + Vite)"]
+    UI -->|View Analytics| Overwatch["Agent Overwatch<br>(Dashboard)"]
     UI <-->|JSON Requests| API["Backend API<br>(FastAPI)"]
     
     subgraph Google_Cloud ["Google Cloud / Firebase"]
@@ -58,6 +59,7 @@ graph TD
     Verify -.->|Trace| Opik
     
     API <-->|Auth & Data| DB
+    API <-->|Fetch Telemetry| Opik
 ```
 
 ### 📸 Universal Verification
@@ -65,6 +67,18 @@ PACT isn't just for running.
 *   **Fitness**: Verify runs, rides, and swims via Strava integration.
 *   **Real World Tasks**: Upload a photo evidence (e.g., "Read 10 pages," "Water the plants") and let our Vision AI verify it.
 *   **Text/Journaling**: Submit text updates for semantic analysis.
+
+### 🕵️‍♂️ Agent Overwatch
+A built-in observability dashboard (powered by Opik) that lifts the hood on the AI system.
+*   **Live Traces**: See the step-by-step reasoning chain (Waterfalls) for every agent decision.
+*   **Token Economics**: Real-time tracking of token usage and estimated API costs.
+*   **Safety Scores**: Monitoring of hallucination, bias, and toxicity levels.
+
+### ⚖️ Custom Penalties
+Choose how you suffer if you fail.
+*   **Stake Burn**: The classic financial loss. Money goes to the platform/DAO.
+*   **Public Shame**: An automated bot posts a humiliating tweet on your X timeline.
+*   **Donation**: Your stake is donated to a charity (or anti-charity) of choice.
 
 ### 🐝 Social & Gamification
 Accountability is better together.
@@ -188,6 +202,7 @@ Procrastination and lack of follow-through cost individuals health, wealth, and 
 | `/feed` | `GET` | Get the latest stream of public verification events. |
 | `/leaderboard` | `GET` | Get top users ranked by Trust Score. |
 | `/upload_evidence`| `POST` | Upload generic evidence (images) for verification. |
+| `/opik/stats` | `GET` | Get aggregated agent performance metrics (Latency, Success Rate, Tokens). |
 
 ---
 

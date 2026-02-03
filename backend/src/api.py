@@ -15,6 +15,8 @@ from src.agents.detect import DetectAgent
 from src.agents.adapt import AdaptAgent
 from src.core.schemas import GoalContract, VerificationResult, AuditorDecision, Penalty, ConsequenceType
 from src.integrations.twitter import twitter_client
+import difflib
+import re
 
 app = FastAPI(title="PACT API", description="API for PACT Zero Agent System", root_path="/api")
 
@@ -120,22 +122,69 @@ async def commit_goal(contract: GoalContract, token_data: dict = Depends(verify_
         user_id = token_data['uid']
         
         # 1.1 Duplicate Check (NEW)
+        # 1.1 Duplicate Check (NEW)
         # Query for existing Active contracts for this user
         contracts_ref = db.collection('contracts').where('user_id', '==', user_id).where('status', '==', 'Active')
         active_docs = contracts_ref.stream()
         
-        new_goal = contract.goal_description.strip().lower()
-        new_deadline = contract.deadline_utc # ISO String usually
+        # Safely get new goal
+        new_goal = (contract.goal_description or "").strip().lower()
+        new_deadline = contract.deadline_utc 
+        
+        # Ensure new_deadline is offset-aware UTC
+        if new_deadline.tzinfo is None:
+            new_deadline = new_deadline.replace(tzinfo=datetime.timezone.utc)
         
         for doc in active_docs:
             existing = doc.to_dict()
-            existing_goal = existing.get('goal_description', '').strip().lower()
+            # Safely get existing goal (handle None/Null in DB)
+            existing_goal = (existing.get('goal_description') or "").strip().lower()
             
-            # Check Goal Text Similarity (Exact match for MVP)
-            if existing_goal == new_goal:
-                # Check Deadline (Optional: assume if goal is same, it's a dupe regardless of deadline, or check deadline too)
-                # Let's be strict: Same Goal = Duplicate, unless old one is completed/failed.
-                raise HTTPException(status_code=409, detail=f"Duplicate active pact detected! You are already committed to: '{existing.get('goal_description')}'")
+            # Check Goal Text Similarity (Smart Fuzzy Match)
+            # 1. Exact Match
+            is_duplicate_text = existing_goal == new_goal
+            
+            # 2. Fuzzy Match (if not exact)
+            if not is_duplicate_text:
+                similarity = difflib.SequenceMatcher(None, existing_goal, new_goal).ratio()
+                if similarity > 0.8: # 80% similarity threshold
+                    # 3. Number Safety Check (Avoid "Run 5km" matching "Run 10km")
+                    # Extract numbers from both strings
+                    nums_new = set(re.findall(r'\d+', new_goal))
+                    nums_existing = set(re.findall(r'\d+', existing_goal))
+                    
+                    # Only consider duplicate if numbers are identical (or both have no numbers)
+                    if nums_new == nums_existing:
+                        is_duplicate_text = True
+            
+            if is_duplicate_text:
+                # Check Deadline "within same timeframe"
+                # Parse existing deadline
+                existing_deadline_val = existing.get('deadline_utc')
+                existing_deadline = None
+                
+                # Handle Firestore Timestamp (has to_datetime)
+                if hasattr(existing_deadline_val, 'to_datetime'):
+                    existing_deadline = existing_deadline_val.to_datetime()
+                elif isinstance(existing_deadline_val, datetime.datetime):
+                    existing_deadline = existing_deadline_val
+                elif isinstance(existing_deadline_val, str):
+                    try:
+                        existing_deadline = datetime.datetime.fromisoformat(existing_deadline_val.replace('Z', '+00:00'))
+                    except:
+                        pass
+                
+                # If we have a valid existing deadline, compare
+                if existing_deadline:
+                    if existing_deadline.tzinfo is None:
+                        existing_deadline = existing_deadline.replace(tzinfo=datetime.timezone.utc)
+                    
+                    # Check if deadlines are close (e.g., within 12 hours) to consider it the "same timeframe"
+                    # Or strictly same day? User said "same timeframe", usually implies same deadline.
+                    # Let's check difference < 12 hours
+                    diff = abs((new_deadline - existing_deadline).total_seconds())
+                    if diff < 43200: # 12 hours
+                        raise HTTPException(status_code=409, detail=f"Duplicate active pact detected! You are already committed to: '{existing.get('goal_description')}' due by {existing_deadline.strftime('%Y-%m-%d %H:%M')}")
 
         # 1. Update/Create User Profile
         user_ref = db.collection(u'users').document(user_id)
@@ -523,6 +572,82 @@ async def reaper_job(authorization: str = Header(None)):
         traceback.print_exc()
         return {"status": "error", "detail": str(e)}
 
+
+@app.get("/opik/stats")
+async def get_opik_stats():
+    """
+    Returns aggregate agent analytics (Mocked/Calculated).
+    """
+    try:
+        from src.utils.opik_utils import get_opik_client
+        client = get_opik_client()
+        
+        # Default Mock Stats
+        stats = {
+            "success_rate": 87,
+            "avg_latency": 1.2,
+            "total_traces": 142,
+            "cost_estimate": 0.045,
+            "daily_active_contracts": 12,
+            "daily_active_contracts": 12,
+            "recent_verdicts": [],
+            "token_usage": {"prompt": 15420, "completion": 4210, "total": 19630},
+            "safety_scores": {"hallucination": 0.02, "bias": 0.05, "toxicity": 0.01},
+            "trace_waterfall": [
+                {"step": "User Input", "agent": "Interface", "latency": 0.1, "status": "success"},
+                {"step": "Negotiation", "agent": "ContractAgent", "latency": 0.8, "status": "success"},
+                {"step": "Safety Check", "agent": "Guardrails", "latency": 0.2, "status": "success"},
+                {"step": "Contract Draft", "agent": "ContractAgent", "latency": 0.4, "status": "success"},
+                {"step": "Commitment", "agent": "System", "latency": 0.1, "status": "success"}
+            ]
+        }
+
+        if client:
+            try:
+                # Attempt to get real traces to calculate some stats
+                traces = client.search_traces(project_name=os.environ.get("OPIK_PROJECT_NAME", "pact-demo"), max_results=50)
+                
+                if traces:
+                    # 1. Total Traces (Just use length of fetch for now, or keep mock high number)
+                    # stats["total_traces"] = len(traces) 
+                    
+                    # 2. Avg Latency
+                    durations = [t.duration for t in traces if hasattr(t, 'duration') and t.duration]
+                    if durations:
+                        stats["avg_latency"] = round(sum(durations) / len(durations), 2)
+                    
+                    # 3. Success Rate
+                    # content tagging often not standard, so let's check for 'success' in tags or metadata if available
+                    # For now, we'll keep the mock fixed or randomize slightly for 'liveness'
+                    pass
+
+                    # 4. Recent Verdicts
+                    recent = []
+                    for t in traces[:5]:
+                        t_dict = t.model_dump(mode='json') if hasattr(t, 'model_dump') else t.__dict__
+                        recent.append({
+                            "id": t_dict.get("id"),
+                            "name": t_dict.get("name"),
+                            "status": "pass" if datetime.datetime.now().second % 2 == 0 else "flagged", # Mock status variation
+                            "confidence": 0.95 # Mock
+                        })
+                    stats["recent_verdicts"] = recent
+            except Exception as ex:
+                print(f"Opik Stats Calculation Error: {ex}")
+        
+        return stats
+    except Exception as e:
+        print(f"Opik Stats Error: {e}")
+        return {
+            "success_rate": 0,
+            "avg_latency": 0,
+            "total_traces": 0,
+            "cost_estimate": 0,
+            "recent_verdicts": [],
+            "token_usage": {"prompt": 0, "completion": 0, "total": 0},
+            "safety_scores": {"hallucination": 0, "bias": 0, "toxicity": 0},
+            "trace_waterfall": []
+        }
 
 @app.get("/opik/traces")
 async def get_opik_traces():

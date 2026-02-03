@@ -9,7 +9,7 @@ import { LoginButton } from './components/LoginButton';
 import { Dashboard } from './components/Dashboard';
 import { Community } from './components/Community';
 import { SystemVision } from './components/SystemVision';
-import { LayoutDashboard, PlusCircle, Activity, Wallet, Info, Terminal } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Activity, Wallet, Info, ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { StakeProvider, useStake } from './contexts/StakeContext';
 import './index.css';
@@ -63,6 +63,8 @@ function AppContent() {
     }
   };
 
+  const [duplicateError, setDuplicateError] = useState(false);
+
   const handleConfirm = async () => {
     if (!user) {
       alert("Please sign in to commit to this pact!");
@@ -85,11 +87,9 @@ function AppContent() {
     } catch (err: any) {
       console.error(err);
       if (err.response && err.response.status === 409) {
-        alert(err.response.data.detail || "You already have a similar active pact!");
-        // Optional: Redirect to Nexus/Dashboard to show them the existing one
-        setStep(5);
+        setDuplicateError(true);
       } else {
-        alert('Failed to commit to pact.');
+        alert('Failed to commit to pact. ' + (err.message || ''));
       }
     } finally {
       setIsLoading(false);
@@ -136,6 +136,20 @@ function AppContent() {
       </div>
 
       <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
+
+        {/* System Status Badge (Opik Entry) */}
+        <button
+          onClick={() => setIsSystemVisionOpen(true)}
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-black/40 border border-[var(--brand-primary)]/30 rounded-full backdrop-blur-md hover:bg-[var(--brand-primary)]/10 transition-all group"
+        >
+          <div className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </div>
+          <span className="text-[10px] font-bold text-[var(--brand-primary)] tracking-widest uppercase">
+            SYSTEM OPTIMAL
+          </span>
+        </button>
 
         {/* Stake Balance Display */}
         <div className="group relative flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md cursor-help">
@@ -262,18 +276,6 @@ function AppContent() {
             <span className="uppercase tracking-widest text-xs hidden sm:inline">Buzz</span>
             <span className="sm:hidden"><Activity className="w-5 h-5" /></span>
           </button>
-
-          <div className="w-px h-8 bg-white/10 mx-1"></div>
-
-          <button
-            onClick={() => setIsSystemVisionOpen(true)}
-            className="relative flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-white/5 text-[var(--brand-primary)] hover:text-white transition-all group"
-          >
-            <div className="relative">
-              <Terminal className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-[var(--brand-primary)] rounded-full animate-ping opacity-75"></span>
-            </div>
-          </button>
         </div>
       </div>
 
@@ -292,6 +294,46 @@ function AppContent() {
       </div>
 
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+
+      {/* Duplicate Error Modal */}
+      {duplicateError && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-[#0a0500] border border-red-500/50 rounded-2xl p-8 max-w-md w-full shadow-[0_0_50px_rgba(239,68,68,0.2)] text-center relative overflow-hidden">
+
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.1)_0%,transparent_70%)] pointer-events-none"></div>
+
+            <div className="relative z-10">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 ring-1 ring-red-500/50">
+                <ShieldAlert className="w-8 h-8 text-red-500" />
+              </div>
+
+              <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Duplicate Detected</h3>
+              <p className="text-gray-400 mb-8 font-mono text-sm leading-relaxed">
+                You already have an active pact with this goal and deadline. Use the Nexus to track your progress.
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setDuplicateError(false);
+                    navigateToNexus();
+                  }}
+                  className="w-full py-4 bg-[var(--brand-primary)] hover:bg-white hover:text-black text-black font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg"
+                >
+                  Navigate to Nexus
+                </button>
+                <button
+                  onClick={() => setDuplicateError(false)}
+                  className="w-full py-3 text-gray-500 hover:text-white font-mono text-xs uppercase tracking-widest transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -386,9 +386,17 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                                                         {contract.status || 'ACTIVE'}
                                                     </span>
                                                     <span className="flex items-center gap-1">
-                                                        <ShieldAlert className="w-3 h-3" />
-                                                        Penalty: {contract.penalty?.type === 'stake_burn' ? 'BURN' : 'SHAME'}
-                                                        {contract.penalty?.amount_usd && !['stake_burn', 'public_shame'].includes(contract.penalty.type) && ` $${contract.penalty.amount_usd}`}
+                                                        <ShieldAlert className={`w-3 h-3 ${contract.penalty?.type === 'stake_burn' ? 'text-red-500' : 'text-orange-500'}`} />
+                                                        <span className={contract.penalty?.type === 'stake_burn' ? 'text-red-400' : 'text-orange-400'}>
+                                                            {contract.penalty?.type === 'stake_burn' ? 'STAKE BURN' :
+                                                                contract.penalty?.type === 'public_shame' ? 'PUBLIC SHAME' :
+                                                                    contract.penalty?.type === 'donation' ? 'DONATION' : 'PENALTY'}
+                                                        </span>
+                                                        {(contract.penalty?.amount_usd || contract.penalty_amount) &&
+                                                            <span className="text-white ml-1">
+                                                                ${contract.penalty?.amount_usd || contract.penalty_amount}
+                                                            </span>
+                                                        }
                                                     </span>
                                                     {contract.created_at && (
                                                         <span className="flex items-center gap-1">
@@ -620,6 +628,7 @@ export const Dashboard: React.FC<{ onCreateNew: () => void }> = ({ onCreateNew }
                                     )}
                                 </div>
                             </motion.div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
