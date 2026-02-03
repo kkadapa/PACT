@@ -1,4 +1,4 @@
-# PACT⁰ (Pact Zero)
+# PACT⁰ (Proof-Activated Commitment Tracker)
 
 ![PACT UI Screenshot](pact-design.png)
 
@@ -6,7 +6,7 @@
 >
 > 🌐 **Project Documentation Website**: [pact.github.io](https://kkadapa.github.io/PACT/)
 
-**PACT⁰** is an autonomous multi-agent system that turns resolutions into living commitments. Unlike traditional habit trackers, PACT relies on **financial stakes**, **social pressure**, and **AI verification**.
+**PACT⁰ (Proof-Activated Commitment Tracker)** is an autonomous multi-agent system that turns resolutions into living commitments. Unlike traditional habit trackers, PACT relies on **financial stakes**, **social pressure**, and **AI verification**.
 
 Use the **Contract Agent** to negotiate a binding agreement, verify your progress with **multi-modal evidence** (text, photos, Strava data), and prove your integrity to the community on **The Buzz**.
 
